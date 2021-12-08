@@ -73,11 +73,8 @@ public class OsmDataHandler {
         // Additional array for ids for faster lookup
         ArrayList<Long> stopIDs = new ArrayList<Long>();
         String memberRole = "";
-        RelationMember lastMember;
-        boolean mergedLastTwo = false;
 
         for (Relation busRelation : routeRelations) {
-            lastMember = null;
 
             // Go through all members to retain all nodes which are stops
             for (RelationMember relationMember : busRelation.getMembers()) {
@@ -93,9 +90,6 @@ public class OsmDataHandler {
                         memberRole.equalsIgnoreCase("stop") ||
                         memberRole.equalsIgnoreCase("stop_exit_only") ||
                         memberRole.equalsIgnoreCase("stop_entry_only")) {
-
-
-
 
                     // Current member is node
                     if (relationMember.getMemberType() == EntityType.Node) {
