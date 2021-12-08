@@ -30,6 +30,9 @@ public class OSM_Pbf_Reader implements Sink {
     private ArrayList<Relation> trolleybusRouteRelations = new ArrayList<Relation>();
     private ArrayList<Relation> trainRouteRelations = new ArrayList<Relation>();
     private ArrayList<Relation> tramRouteRelations = new ArrayList<Relation>();
+    private ArrayList<Relation> subwayRouteRelations = new ArrayList<Relation>();
+    private ArrayList<Relation> monorailRouteRelations = new ArrayList<Relation>();
+    private ArrayList<Relation> lightRailRouteRelations = new ArrayList<Relation>();
     // Necessary because some platforms are mapped as relations (currently not in use because osm data is premanipulated with osmosis)
     private HashMap<Long, Relation> platformRelations = new HashMap<Long, Relation>();
 
@@ -85,6 +88,15 @@ public class OSM_Pbf_Reader implements Sink {
                 else if (currrentTag.getValue().equalsIgnoreCase("tram")){
                     tramRouteRelations.add(relation);
                 }
+                else if (currrentTag.getValue().equalsIgnoreCase("subway")){
+                    subwayRouteRelations.add(relation);
+                }
+                else if (currrentTag.getValue().equalsIgnoreCase("light_rail")){
+                    lightRailRouteRelations.add(relation);
+                }
+                else if (currrentTag.getValue().equalsIgnoreCase("monorail")){
+                    monorailRouteRelations.add(relation);
+                }
                 // route is not of public transport type (which should not occur when data is manipulated before reading with this class)
                 else{
                 }
@@ -115,7 +127,7 @@ public class OSM_Pbf_Reader implements Sink {
         //FIXME: Take path to string as input parameter
         InputStream inputStream = null;
         try {
-            inputStream = new FileInputStream("/Users/jimmy/Desktop/stuttgart-shortened.osm.pbf");
+            inputStream = new FileInputStream("/Users/jimmy/Desktop/Stuttgart/stuttgart-publicTransport.osm.pbf");
         } catch (FileNotFoundException e) {
             System.out.println("Could not find that file!");
             e.printStackTrace();
