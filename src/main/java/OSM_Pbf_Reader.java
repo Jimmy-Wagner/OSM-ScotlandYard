@@ -55,56 +55,51 @@ public class OSM_Pbf_Reader implements Sink {
             organizeRelations(currentRelation);
         }
         //FIXME: Save bounds and check if chosen center of map with zoomlevel is inside this bounds
-        else if(entityContainer instanceof BoundContainer){
+        else if (entityContainer instanceof BoundContainer) {
             Bound bound = ((BoundContainer) entityContainer).getEntity();
-        }
-        else {
+        } else {
             System.out.println("Reading the pbf file finished!");
         }
     }
 
     /**
      * Puts the given relation in the right List of relations (bus-, train-, tram-, trolleybus-routes) based on its tags.
+     *
      * @param relation
      */
     private void organizeRelations(Relation relation) {
 
-        for (Tag currrentTag: relation.getTags()){
+        for (Tag currrentTag : relation.getTags()) {
             // When premanipulated with osmosis command line application, pbf file should already only contain route relations
-            if (currrentTag.getKey().equalsIgnoreCase("route")){
+            if (currrentTag.getKey().equalsIgnoreCase("route")) {
                 // route=bus
-                if (currrentTag.getValue().equalsIgnoreCase("bus")){
+                if (currrentTag.getValue().equalsIgnoreCase("bus")) {
                     busRouteRelations.add(relation);
                 }
                 // route=trolleybus
-                else if (currrentTag.getValue().equalsIgnoreCase("trolleybus")){
+                else if (currrentTag.getValue().equalsIgnoreCase("trolleybus")) {
                     trolleybusRouteRelations.add(relation);
                 }
                 // route=train
-                else if (currrentTag.getValue().equalsIgnoreCase("train")){
+                else if (currrentTag.getValue().equalsIgnoreCase("train")) {
                     trainRouteRelations.add(relation);
                 }
                 // route=tram
-                else if (currrentTag.getValue().equalsIgnoreCase("tram")){
+                else if (currrentTag.getValue().equalsIgnoreCase("tram")) {
                     tramRouteRelations.add(relation);
-                }
-                else if (currrentTag.getValue().equalsIgnoreCase("subway")){
+                } else if (currrentTag.getValue().equalsIgnoreCase("subway")) {
                     subwayRouteRelations.add(relation);
-                }
-                else if (currrentTag.getValue().equalsIgnoreCase("light_rail")){
+                } else if (currrentTag.getValue().equalsIgnoreCase("light_rail")) {
                     lightRailRouteRelations.add(relation);
-                }
-                else if (currrentTag.getValue().equalsIgnoreCase("monorail")){
+                } else if (currrentTag.getValue().equalsIgnoreCase("monorail")) {
                     monorailRouteRelations.add(relation);
                 }
                 // route is not of public transport type (which should not occur when data is manipulated before reading with this class)
-                else{
+                else {
                 }
-            }
-            else if(currrentTag.getKey().equalsIgnoreCase("platform")){
+            } else if (currrentTag.getKey().equalsIgnoreCase("platform")) {
                 platformRelations.put(relation.getId(), relation);
-            }
-            else{
+            } else {
                 //Something went wrong because after osmosis premanipulation there should only be pulbic transport route relations and platform relations for stops
             }
         }
@@ -121,13 +116,14 @@ public class OSM_Pbf_Reader implements Sink {
 
     /**
      * This method initiates the reading of the given pbf file
+     *
      * @return dataHandler the object of the Data class
      */
     public OsmDataHandler readOsmPbfFile() {
         //FIXME: Take path to string as input parameter
         InputStream inputStream = null;
         try {
-            inputStream = new FileInputStream("/Users/jimmy/Desktop/Stuttgart/stuttgart-publicTransport.osm.pbf");
+            inputStream = new FileInputStream("/Users/jimmy/Desktop/london/publictransportRoutesAllInclusive.osm.pbf");
         } catch (FileNotFoundException e) {
             System.out.println("Could not find that file!");
             e.printStackTrace();
@@ -137,9 +133,13 @@ public class OSM_Pbf_Reader implements Sink {
         reader.setSink(this);
         System.out.println("Reading the file");
         reader.run();
+        // Adde alle szugähnlichen routes zu trainroutes
+        tramRouteRelations.addAll(monorailRouteRelations);
         System.out.println("IN OSM_Pbf_reader:");
         System.out.println("allNodes size: " + allNodes.size());
         System.out.println("busRouteRelations size: " + busRouteRelations.size());
-        return new OsmDataHandler(allNodes, allWays, busRouteRelations, trolleybusRouteRelations, trainRouteRelations, tramRouteRelations, platformRelations);
+        return new OsmDataHandler(allNodes, allWays, busRouteRelations,
+                trolleybusRouteRelations, trainRouteRelations, tramRouteRelations,
+                subwayRouteRelations, monorailRouteRelations, lightRailRouteRelations, platformRelations);
     }
 }

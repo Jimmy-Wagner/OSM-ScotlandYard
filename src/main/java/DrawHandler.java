@@ -39,17 +39,61 @@ public class DrawHandler {
             case 1000:
                 drawTram();
                 break;
+            case 10000:
+                drawSubway();
+                break;
+            case 10100:
+                drawTrain();
+                drawSubway();
+                break;
+            case 10001:
+                drawSubway();
+                drawBus();
+                break;
+            case 10101:
+                drawTrain();
+                drawSubway();
+                drawBus();
+            case 100000:
+                drawLightrail();
+                break;
             case 101:
                 drawTrain();
                 drawBus();
+                break;
+            case 1100:
+                drawTrain();
+                drawTram();
                 break;
             case 1101:
                 drawTrain();
                 drawTram();
                 drawBus();
                 break;
+            case 1111:
+                drawTrain();
+                drawTram();
+                drawBus();
+                drawTrolleybus();
             default: break;
         }
+    }
+
+    /**
+     * Draws stops and/or ways for tram
+     */
+    private void drawLightrail() {
+        ArrayList<Node> stops = dataHandler.getlightRailStops();
+        ArrayList<Way> routeWays = dataHandler.getLightrailRouteWays();
+        actualDrawMethod(stops, routeWays, 100000);
+    }
+    /**
+     * Draws stops and/or ways for tram
+     */
+    private void drawSubway() {
+        ArrayList<Node> stops = dataHandler.getSubwayStops();
+        ArrayList<Way> routeWays = dataHandler.getSubwayRouteWays();
+        actualDrawMethod(stops, routeWays, 10000);
     }
 
     /**
@@ -155,7 +199,7 @@ public class DrawHandler {
                 color = new Color(0,128,0);
                 break;
             case 10:
-                color = Color.BLUE;
+                color = Color.GRAY;
                 break;
             case 100:
                 color = Color.PINK;
@@ -163,8 +207,14 @@ public class DrawHandler {
             case 1000:
                 color = new Color(97, 54, 89);
                 break;
+            case 10000:
+                color = Color.BLUE;
+                break;
+            case 100000:
+                color = Color.LIGHT_GRAY;
+                break;
             default:
-                color = Color.BLACK;
+                color = Color.WHITE;
                 break;
         }
         return color;
@@ -182,7 +232,7 @@ public class DrawHandler {
                 color = Color.GREEN;
                 break;
             case 10:
-                color = new Color(50,200,200);
+                color = Color.WHITE;
                 break;
             case 100:
                 color = Color.RED;
@@ -190,8 +240,14 @@ public class DrawHandler {
             case 1000:
                 color = new Color(193, 151, 210);
                 break;
-            default:
+            case 10000:
+                color = new Color(50,200,200);
+                break;
+            case 100000:
                 color = Color.BLACK;
+                break;
+            default:
+                color = Color.WHITE;
                 break;
         }
         return color;

@@ -25,7 +25,7 @@ public class Main {
         BufferedImage staticImage = imageApiCaller.callApi();
         ImageFrame imageFrame = new ImageFrame(staticImage, imageData);
 
-        // 1= bus, 10= trolleybus, 100=train, 1000=tram
+        // 1= bus, 10= trolleybus, 100=train, 1000=tram, 10000=subway, 100000=lightrail, 1000000=monorail
         int routeType = ConsoleDialog.selectRouteTypes();
         int stopsOrRoutes = ConsoleDialog.selectStopsOrRoutes();
 

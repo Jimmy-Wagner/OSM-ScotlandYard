@@ -11,7 +11,7 @@ public class ConsoleDialog {
      * @return routetype
      */
     public static int selectRouteTypes(){
-        System.out.println("Do you want route information for 1:bus, 10:trolleybus, 100:train, 1000:tram");
+        System.out.println("Do you want route information for 1:bus, 10:trolleybus, 100:train, 1000:tram, 10000:subway, 100000:light rail, 1000000:monorail");
         System.out.println("Type the sum of the values which you want to select");
         return scanner.nextInt();
     }

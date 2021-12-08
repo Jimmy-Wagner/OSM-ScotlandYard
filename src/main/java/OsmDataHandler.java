@@ -16,6 +16,9 @@ public class OsmDataHandler {
     private ArrayList<Relation> trolleybusRouteRelations;
     private ArrayList<Relation> trainRouteRelations;
     private ArrayList<Relation> tramRouteRelations;
+    private ArrayList<Relation> subwayRouteRelations;
+    private ArrayList<Relation> monorailRouteRelations;
+    private ArrayList<Relation> lightRailRouteRelations;
     // Necessary because some platforms are mapped as relations (currently not in use because osm data is premanipulated with osmosis)
     private HashMap<Long, Relation> otherRelations;
 
@@ -35,12 +38,18 @@ public class OsmDataHandler {
                           ArrayList<Relation> trolleybusRouteRelations,
                           ArrayList<Relation> trainRouteRelations,
                           ArrayList<Relation> tramRouteRelations,
+                          ArrayList<Relation> subwayRouteRelations,
+                          ArrayList<Relation> monorailRouteRelations,
+                          ArrayList<Relation> lightRailRouteRelations,
                           HashMap<Long, Relation> platformRelations) {
         this.allNodes = allNodes;
         this.allWays = allWays;
         this.busRouteRelations = busRouteRelations;
         this.trolleybusRouteRelations = trolleybusRouteRelations;
         this.trainRouteRelations = trainRouteRelations;
+        this.subwayRouteRelations = subwayRouteRelations;
+        this.lightRailRouteRelations = lightRailRouteRelations;
+        this.monorailRouteRelations = monorailRouteRelations;
         this.tramRouteRelations = tramRouteRelations;
         this.otherRelations = platformRelations;
     }
@@ -88,7 +97,7 @@ public class OsmDataHandler {
     }
 
     /**
-     * Retrieves all bus stops which are contained in the bus routes
+     * Retrieves all train stops which are contained in the bus routes
      *
      * @return trainStops
      */
@@ -97,10 +106,37 @@ public class OsmDataHandler {
     }
 
     /**
-     * Retrieves all tram stops which are contained in the tram routes
+     * Retrieves all subway stops which are contained in the bus routes
      *
-     * @return tramStops
+     * @return trainStops
      */
+    public ArrayList<Node> getSubwayStops() {
+        return getRailwayStops(subwayRouteRelations);
+    }
+
+    /**
+     * Retrieves all lightrail stops which are contained in the bus routes
+     *
+     * @return trainStops
+     */
+    public ArrayList<Node> getlightRailStops() {
+        return getRailwayStops(lightRailRouteRelations);
+    }
+
+    /**
+     * Retrieves all monotrail stops which are contained in the bus routes
+     *
+     * @return trainStops
+     */
+    public ArrayList<Node> getmonoRailStops() {
+        return getRailwayStops(monorailRouteRelations);
+    }
+
+        /**
+         * Retrieves all tram stops which are contained in the tram routes
+         *
+         * @return tramStops
+         */
     public ArrayList<Node> getTramStops() {
         return getRailwayStops(tramRouteRelations);
     }
@@ -127,7 +163,10 @@ public class OsmDataHandler {
                 // bus stops are mapped as a platform (Node, Way, Relation) and sometimes a stop (node) => use the platform
                 if (relationMember.getMemberRole().equalsIgnoreCase("platform") ||
                         relationMember.getMemberRole().equalsIgnoreCase("platform_exit_only") ||
-                        relationMember.getMemberRole().equalsIgnoreCase("platform_entry_only")) {
+                        relationMember.getMemberRole().equalsIgnoreCase("platform_entry_only") ||
+                        relationMember.getMemberRole().equalsIgnoreCase("stop") ||
+                        relationMember.getMemberRole().equalsIgnoreCase("stop_exit_only") ||
+                        relationMember.getMemberRole().equalsIgnoreCase("stop_entry_only")) {
 
                     // Current member is node
                     if (relationMember.getMemberType() == EntityType.Node) {
@@ -250,6 +289,33 @@ public class OsmDataHandler {
      */
     public ArrayList<Way> getTrainRouteWays() {
         return getRouteWays(trainRouteRelations);
+    }
+
+    /**
+     * Retrieves all ways which are used in train routes
+     *
+     * @return trainRouteWays
+     */
+    public ArrayList<Way> getSubwayRouteWays() {
+        return getRouteWays(subwayRouteRelations);
+    }
+
+    /**
+     * Retrieves all ways which are used in train routes
+     *
+     * @return trainRouteWays
+     */
+    public ArrayList<Way> getLightrailRouteWays() {
+        return getRouteWays(lightRailRouteRelations);
+    }
+
+    /**
+     * Retrieves all ways which are used in train routes
+     *
+     * @return trainRouteWays
+     */
+    public ArrayList<Way> getmonorailRouteWays() {
+        return getRouteWays(monorailRouteRelations);
     }
 
     /**

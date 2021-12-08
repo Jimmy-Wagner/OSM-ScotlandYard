@@ -6,7 +6,7 @@ import com.mapbox.geojson.Point;
  */
 public class ImageData {
     // Zoom level for the map image. This determines the size of the bounding box.
-    private final int ZOOMLEVEL = 14;
+    private final float ZOOMLEVEL = 13f;
     // [lon(min),lat(min),lon(max),lat(max)] for apicall
     // [west, south, east, north]
     private double [] boundingbox;
@@ -73,7 +73,7 @@ public class ImageData {
         return degrees * Math.PI / 180;
     };
 
-    public int getZOOMLEVEL() {
+    public float getZOOMLEVEL() {
         return ZOOMLEVEL;
     }
 
