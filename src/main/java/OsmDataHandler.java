@@ -20,7 +20,10 @@ public class OsmDataHandler {
     private ArrayList<Relation> monorailRouteRelations;
     private ArrayList<Relation> lightRailRouteRelations;
     // Necessary because some platforms are mapped as relations (currently not in use because osm data is premanipulated with osmosis)
-    private HashMap<Long, Relation> otherRelations;
+    private HashMap<Long, Relation> platformRelations;
+
+    private ArrayList<MergedStopAndPlatform> mergedBusStopsAndPlatforms;
+    private HashMap<>
 
     /**
      * Initialization of the Data through {@link OSM_Pbf_Reader}
@@ -51,7 +54,218 @@ public class OsmDataHandler {
         this.lightRailRouteRelations = lightRailRouteRelations;
         this.monorailRouteRelations = monorailRouteRelations;
         this.tramRouteRelations = tramRouteRelations;
-        this.otherRelations = platformRelations;
+        this.platformRelations = platformRelations;
+        // Initialize this list
+        mergedBusStopsAndPlatforms = new ArrayList<MergedStopAndPlatform>();
+    }
+
+
+    public void mergeBusStopsAndPlatformsOverall() {
+        // Needs to be saved for comparison with curentMember
+        RelationMember lastMember = null;
+        boolean mergedLastTwo = false;
+
+        for (Relation currentBusRelation : busRouteRelations) {
+            lastMember = null;
+            for (RelationMember currentMember : currentBusRelation.getMembers()) {
+                // All stops and platforms have been already read so go to the next relation
+                if (currentMember.getMemberRole().equalsIgnoreCase("")) break;
+
+                    // Otherwise the last member is null and there is nothing to compare
+                    if (lastMember != null  && !mergedLastTwo) {
+                        // one is stop and the other platform
+                        if (firstStopSecondPlatform(currentMember, lastMember)) {
+                            // The prerequisites are fulfilled for a possible merge, in the following method the distance is checked
+                            mergedLastTwo = mergeBusStopsAndPlatforms(currentMember, lastMember);
+                        }
+                        else if(firstStopSecondPlatform(lastMember, currentMember)){
+                            mergedLastTwo = mergeBusStopsAndPlatforms(lastMember, currentMember);
+                        }
+                    }
+
+                lastMember = currentMember;
+            }
+        }
+    }
+
+    /**
+     * This method takes two Relationmembers (which should be one stop and one platform) and trys to merge them into one {@link MergedStopAndPlatform}
+     * and adds this eventually to mergedBusStopsAndPlatforms
+     * @param stop should be a stop of Type Node
+     * @param platform should be a platform of type Node, Way or Relation
+     * @return wasMerged true if the parameters have been merged into one {@link MergedStopAndPlatform}
+     */
+    private boolean mergeBusStopsAndPlatforms(RelationMember stop, RelationMember platform) {
+        // Only for platform necessary because stop is always a node
+        EntityType platformType = platform.getMemberType();
+        long stopID = stop.getMemberId();
+        long platformID = platform.getMemberId();
+        EntityType node = EntityType.Node;
+        EntityType way = EntityType.Way;
+        EntityType relation = EntityType.Relation;
+        Node fullStopNode = allNodes.get(stopID);
+        Node fullNodePlatformNode;
+        // Of way and relation only one because there can only one member which is relation or way (platform)
+        // Because at least one member of a merge has to be a stop which is always a node
+        Way fullWayPlatform;
+        Relation fullRelationPlatform;
+        boolean wasMerged = false;
+
+        switch (platformType){
+            case Node:
+                fullNodePlatformNode = allNodes.get(platformID);
+                // Try to merge platform into stop
+                wasMerged = tryToMerge(fullStopNode, fullNodePlatformNode);
+                break;
+            case Way:
+                fullWayPlatform = allWays.get(platformID);
+                wasMerged = tryToMerge(fullStopNode, fullWayPlatform);
+                break;
+            case Relation:
+                fullRelationPlatform = platformRelations.get(platformID);
+                wasMerged = tryToMerge(fullStopNode, fullRelationPlatform);
+                break;
+        }
+        return wasMerged;
+
+    }
+
+
+    /**
+     * This method checks if a stop and a platform are coherent and merges them if they are into one {@link MergedStopAndPlatform}
+     * @param stop
+     * @param platform
+     * @return wasMerged
+     */
+    public boolean tryToMerge(Node stop, Node platform){
+        if (calculateDistanceTwoNodes(stop, platform) < 20){
+            mergedBusStopsAndPlatforms.add(new MergedStopAndPlatform(stop.getId(), platform.getId()));
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * This method checks if a stop and a platform are coherent and merges them if they are into one {@link MergedStopAndPlatform}
+     * @param stop
+     * @param platform
+     * @return wasMerged
+     */
+    private boolean tryToMerge(Node stop, Way platform){
+        Node firstNode = getFirstNode(platform);
+        if (calculateDistanceTwoNodes(stop, firstNode) < 20){
+            mergedBusStopsAndPlatforms.add(new MergedStopAndPlatform(stop.getId(), platform.getId()));
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns the first node of the way that is contained in scope of the osm data of the pbf file that is read in {@link OSM_Pbf_Reader}
+     * @param way
+     * @return firstContainedNode
+     */
+    private Node getFirstNode(Way way){
+        Node firstNodeNotNull = null;
+        for (WayNode wayNode: way.getWayNodes()){
+            firstNodeNotNull = allNodes.get(wayNode.getNodeId());
+            if (allNodes.get(firstNodeNotNull) != null){
+                return firstNodeNotNull;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * This method checks if a stop and a platform are coherent and merges them if they are into one {@link MergedStopAndPlatform}
+     * @param stop
+     * @param platform
+     * @return wasMerged
+     */
+    private boolean tryToMerge(Node stop, Relation platform){
+        Node firstNode = getFirstNode(platform);
+        if (calculateDistanceTwoNodes(stop, firstNode) < 20){
+            mergedBusStopsAndPlatforms.add(new MergedStopAndPlatform(stop.getId(), platform.getId()));
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns the first node of the way that is contained in scope of the osm data of the pbf file that is read in {@link OSM_Pbf_Reader}
+     * @param relation
+     * @return firstContainedNode
+     */
+    private Node getFirstNode(Relation relation){
+        Node firstNodeNotNull = null;
+        long relationMemberID;
+        for (RelationMember member: relation.getMembers()){
+
+            relationMemberID = member.getMemberId();
+
+            if (member.getMemberType() == EntityType.Node){
+                firstNodeNotNull = allNodes.get(relationMemberID);
+                if (firstNodeNotNull != null){
+                    return  firstNodeNotNull;
+                }
+            }
+            else if (member.getMemberType() == EntityType.Way){
+                Way currentWay = allWays.get(relationMemberID);
+                if (currentWay != null){
+                    // Retrieve the first node that is not null from that way
+                    firstNodeNotNull = getFirstNode(currentWay);
+                    return  firstNodeNotNull;
+                }
+            }
+        }
+        return null;
+    }
+
+
+
+    /**
+     * Checks if the first member has the role stop and the second member the role platform.
+     *
+     * @param member1
+     * @param member2
+     * @return stopAndPlatform
+     */
+    public boolean firstStopSecondPlatform(RelationMember member1, RelationMember member2) {
+        if (member1 == null || member2 == null) {
+            return false;
+        }
+        // 1 is stop
+        if (member1.getMemberRole().equalsIgnoreCase("stop") ||
+                member1.getMemberRole().equalsIgnoreCase("stop_entry_only") ||
+                member1.getMemberRole().equalsIgnoreCase("stop_exit_only")) {
+            // 2 is platform
+            if (member2.getMemberRole().equalsIgnoreCase("platform") ||
+                    member1.getMemberRole().equalsIgnoreCase("platform_entry_only") ||
+                    member1.getMemberRole().equalsIgnoreCase("platform_exit_only")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Calculates the distance in meters of two nodes
+     *
+     * @param node1
+     * @param node2
+     * @return distance in meters
+     */
+    public double calculateDistanceTwoNodes(Node node1, Node node2) {
+        final double p = 0.017453292519943295;    // Math.PI / 180
+        double lat1 = node1.getLatitude();
+        double lon1 = node1.getLongitude();
+        double lat2 = node2.getLatitude();
+        double lon2 = node2.getLongitude();
+        double a = 0.5 - Math.cos((lat2 - lat1) * p) / 2 +
+                Math.cos(lat1 * p) * Math.cos(lat2 * p) *
+                        (1 - Math.cos((lon2 - lon1) * p)) / 2;
+
+        return 12742 * Math.asin(Math.sqrt(a)) * 1000; // 2 * R; R = 6371 km
     }
 
     public HashMap<Long, Node> getAllNodes() {
@@ -132,11 +346,11 @@ public class OsmDataHandler {
         return getRailwayStops(monorailRouteRelations);
     }
 
-        /**
-         * Retrieves all tram stops which are contained in the tram routes
-         *
-         * @return tramStops
-         */
+    /**
+     * Retrieves all tram stops which are contained in the tram routes
+     *
+     * @return tramStops
+     */
     public ArrayList<Node> getTramStops() {
         return getRailwayStops(tramRouteRelations);
     }
@@ -208,7 +422,7 @@ public class OsmDataHandler {
                     else if (relationMember.getMemberType() == EntityType.Relation) {
                         // Add the relation platform only for buses because for trains have a corresponding stop node that is used
                         //Get the first node of the relation for the platform representation
-                        Relation platformRelation = otherRelations.get(relationMember.getMemberId());
+                        Relation platformRelation = platformRelations.get(relationMember.getMemberId());
                         if (platformRelation != null) {
                             Node stopNode = null;
                             for (RelationMember member : platformRelation.getMembers()) {
