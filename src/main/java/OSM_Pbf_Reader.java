@@ -128,7 +128,7 @@ public class OSM_Pbf_Reader implements Sink {
         //FIXME: Take path to string as input parameter
         InputStream inputStream = null;
         try {
-            inputStream = new FileInputStream("/Users/jimmy/Desktop/london/publictransportRoutesAllInclusive.osm.pbf");
+            inputStream = new FileInputStream("/Users/jimmy/Desktop/london/0.publictransportRoutesAllInclusive.osm.pbf");
         } catch (FileNotFoundException e) {
             System.out.println("Could not find that file!");
             e.printStackTrace();

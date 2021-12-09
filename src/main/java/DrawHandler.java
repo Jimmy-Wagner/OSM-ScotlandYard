@@ -51,9 +51,9 @@ public class DrawHandler {
                 drawBus();
                 break;
             case 10101:
-                drawTrain();
-                drawSubway();
                 drawBus();
+                drawSubway();
+                drawTrain();
             case 100000:
                 drawLightrail();
                 break;
@@ -91,7 +91,8 @@ public class DrawHandler {
      * Draws stops and/or ways for tram
      */
     private void drawSubway() {
-        ArrayList<Node> stops = dataHandler.getSubwayStops();
+        ArrayList<Node> stops = dataHandler.getSubwayStopsRichtig();
+        System.out.println("Size of subway stops: " + stops.size());
         ArrayList<Way> routeWays = dataHandler.getSubwayRouteWays();
         actualDrawMethod(stops, routeWays, 10000);
     }
@@ -127,7 +128,7 @@ public class DrawHandler {
      * Draws stops and/or ways for bus
      */
     private void drawBus(){
-        ArrayList<Node> stops = dataHandler.getBusStops();
+        ArrayList<Node> stops = dataHandler.getStreetBusStopsRichtig();
         System.out.println("drawBus() | size of busstoplist: " + stops.size());
         ArrayList<Way> routeWays = dataHandler.getBusRouteWays();
         actualDrawMethod(stops, routeWays, 1);
@@ -208,7 +209,7 @@ public class DrawHandler {
                 color = new Color(97, 54, 89);
                 break;
             case 10000:
-                color = Color.BLUE;
+                color = new Color(50,200,200);
                 break;
             case 100000:
                 color = Color.LIGHT_GRAY;
@@ -241,7 +242,7 @@ public class DrawHandler {
                 color = new Color(193, 151, 210);
                 break;
             case 10000:
-                color = new Color(50,200,200);
+                color = Color.BLUE;
                 break;
             case 100000:
                 color = Color.BLACK;
