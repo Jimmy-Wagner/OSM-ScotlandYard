@@ -23,8 +23,7 @@ public class OsmDataHandler {
     private HashMap<Long, Relation> platformRelations;
 
     private ArrayList<MergedStopAndPlatform> mergedBusStopsAndPlatforms;
-    private HashMap<Long, Long> platformToStopMapping;
-    private HashMap<Long, EntityType> platformIdToTypeMapping;
+
 
     /**
      * Initialization of the Data through {@link OSM_Pbf_Reader}
@@ -58,121 +57,125 @@ public class OsmDataHandler {
         this.platformRelations = platformRelations;
         // Initialize this list
         mergedBusStopsAndPlatforms = new ArrayList<MergedStopAndPlatform>();
+        platformToStopMapping = new HashMap<Long, Long>();
+        stopAndPlatformToTypeMapping = new HashMap<Long, EntityType>();
     }
 
+    // Eigene stops have the value 0L and platforms that are coherent with a existing stop are mapped to the id of the stop
+    private HashMap<Long, Long> platformToStopMapping;
+    // To recognize fast which type the platform has without the need for a lookup in allNodes, allWays and platformRelations lists
+    private HashMap<Long, EntityType> stopAndPlatformToTypeMapping;
 
-    /**
-     * Retrieves stops which are contained in the resepective routes
-     *
-     * @param routeRelations
-     * @return
-     */
-    public ArrayList<Node> getStreetStops(ArrayList<Relation> routeRelations) {
 
-        ArrayList<Node> stops = new ArrayList<Node>();
-        // Additional array for ids for faster lookup
-        ArrayList<Long> stopIDs = new ArrayList<Long>();
-        String memberRole = "";
-
-        for (Relation busRelation : routeRelations) {
-
-            // Go through all members to retain all nodes which are stops
-            for (RelationMember relationMember : busRelation.getMembers()) {
-                memberRole = relationMember.getMemberRole();
-                // in that case all stops have been read already
-                if (memberRole.equalsIgnoreCase("")) break;
-
-                // "Although many people use the role "stop" for the bus stops, the role is now discouraged." - OSM Wiki
-                // bus stops are mapped as a platform (Node, Way, Relation) and sometimes a stop (node) => use the platform
-                if (memberRole.equalsIgnoreCase("platform") ||
-                        memberRole.equalsIgnoreCase("platform_exit_only") ||
-                        memberRole.equalsIgnoreCase("platform_entry_only") ||
-                        memberRole.equalsIgnoreCase("stop") ||
-                        memberRole.equalsIgnoreCase("stop_exit_only") ||
-                        memberRole.equalsIgnoreCase("stop_entry_only")) {
-
-                    // Current member is node
-                    if (relationMember.getMemberType() == EntityType.Node) {
-                        // Get the node with all its information
-                        Node stopNode = allNodes.get(relationMember.getMemberId());
-                        // The nodemember of the relation is maybe out of bounds of the osm data so the node is not contained in allNodes
-                        if (stopNode != null) {
-                            long stopNodeID = stopNode.getId();
-                            if (!stopIDs.contains(stopNodeID)) {
-                                // Add station to bus stops list
-                                stops.add(stopNode);
-                                stopIDs.add(stopNodeID);
-                            }
-                        }
+    public ArrayList<Node> getBusStopsNeu() {
+        mergeBusStopsAndPlatformsOverall();
+        ArrayList<Node> listOfStops = new ArrayList<Node>();
+        EntityType stopType;
+        // First node of a plaform way or platform relation
+        Node firstNode;
+        System.out.println("Size of stops as keys in hashmap: " + platformToStopMapping.keySet().size());
+        for (long idOfStop : platformToStopMapping.keySet()) {
+            // In this case the platform or the stop are a stop on its own and not based on another stop
+            if (platformToStopMapping.get(idOfStop) == 0L){
+                stopType = stopAndPlatformToTypeMapping.get(idOfStop);
+                if (stopType == EntityType.Node){
+                    listOfStops.add(allNodes.get(idOfStop));
+                }
+                else if(stopType == EntityType.Way){
+                    firstNode = getFirstNode(allWays.get(idOfStop));
+                    if (firstNode != null){
+                        listOfStops.add(firstNode);
                     }
-                    //current member is way
-                    // Necessary because some bus platforms are mapped as ways
-                    else if (relationMember.getMemberType() == EntityType.Way) {
-                        //Get the first node of the way as representation for the platform
-                        Way platformWay = allWays.get(relationMember.getMemberId());
-                        Node stopNode = getFirstNode(platformWay);
-                        // The nodemember of the relation is maybe out of bounds of the osm data so the node is not contained in allNodes
-                        if (stopNode != null) {
-                            long stopNodeID = stopNode.getId();
-                            if (!stopIDs.contains(stopNodeID)) {
-                                // Add station to bus stops list
-                                stops.add(stopNode);
-                                stopIDs.add(stopNodeID);
-                            }
-                        }
-                    }
-
-                    //current member is a relation
-                    // Necessary because some platforms are mapped as relations (these platforms have tags public_transport=platform!)
-                    else if (relationMember.getMemberType() == EntityType.Relation) {
-                        // Add the relation platform only for buses because for trains have a corresponding stop node that is used
-                        //Get the first node of the relation for the platform representation
-                        Relation platformRelation = platformRelations.get(relationMember.getMemberId());
-                        if (platformRelation != null) {
-                            Node stopNode = getFirstNode(platformRelation);
-                            // The nodemember of the relation is maybe out of bounds of the osm data so the node is not contained in allNodes
-                            if (stopNode != null) {
-                                long stopNodeID = stopNode.getId();
-                                if (!stopIDs.contains(stopNodeID)) {
-                                    // Add station to bus stops list
-                                    stops.add(stopNode);
-                                    stopIDs.add(stopNodeID);
-                                }
-                            }
-                        }
+                }
+                else if(stopType == EntityType.Relation){
+                    firstNode = getFirstNode(platformRelations.get(idOfStop));
+                    if (firstNode != null){
+                        listOfStops.add(firstNode);
                     }
                 }
             }
         }
-        return stops;
+        return listOfStops;
     }
 
 
+    /**
+     * Initializes the platformToStopMapping and the platformAndStopToType Hashmaps which are used to see if
+     * stops and platforms have to been merged.
+     */
     public void mergeBusStopsAndPlatformsOverall() {
         // Needs to be saved for comparison with curentMember
-        RelationMember lastMember = null;
+        RelationMember lastMember;
         boolean mergedLastTwo = false;
+        long currentMemberId;
 
         for (Relation currentBusRelation : busRouteRelations) {
             lastMember = null;
             for (RelationMember currentMember : currentBusRelation.getMembers()) {
+                currentMemberId = currentMember.getMemberId();
                 // All stops and platforms have been already read so go to the next relation
-                if (currentMember.getMemberRole().equalsIgnoreCase("")) break;
+                if (hasNoRole(currentMember)) break;
+                if (hasRoleStop(currentMember)) {
+                    // Dies eline eventuell rausnehmen TODO:
+                    platformToStopMapping.put(currentMemberId, 0L);
+                    stopAndPlatformToTypeMapping.put(currentMemberId, currentMember.getMemberType());
+                }
+                if (hasRolePlatform(currentMember)) {
+                    stopAndPlatformToTypeMapping.put(currentMemberId, currentMember.getMemberType());
+                }
 
                 // Otherwise the last member is null and there is nothing to compare
                 if (lastMember != null && !mergedLastTwo) {
-                    // one is stop and the other platform
+                    // currentMember is stop and the lastMember platform
                     if (firstStopSecondPlatform(currentMember, lastMember)) {
                         // The prerequisites are fulfilled for a possible merge, in the following method the distance is checked
                         mergedLastTwo = mergeBusStopsAndPlatforms(currentMember, lastMember);
+                        // Wenn die beiden gemerged werden, dann bilde die platform auf den stop ab
+                        if (mergedLastTwo) {
+                            platformToStopMapping.put(lastMember.getMemberId(), currentMemberId);
+                        } else {
+                            platformToStopMapping.put(lastMember.getMemberId(), 0L);
+                        }
+                        // lastMember is stop and currentMember is platform (most likely)
                     } else if (firstStopSecondPlatform(lastMember, currentMember)) {
                         mergedLastTwo = mergeBusStopsAndPlatforms(lastMember, currentMember);
+                        if (mergedLastTwo) {
+                            platformToStopMapping.put(currentMemberId, lastMember.getMemberId());
+                        } else
+                            platformToStopMapping.put(currentMemberId, 0L);
                     }
+                } else {
+                    platformToStopMapping.put(currentMemberId, 0L);
+                    mergedLastTwo = false;
                 }
 
                 lastMember = currentMember;
             }
         }
+
+    }
+
+    public boolean hasNoRole(RelationMember member) {
+        return member.getMemberRole().equalsIgnoreCase("");
+    }
+
+
+    public boolean hasRoleStop(RelationMember member) {
+        if (member.getMemberRole().equalsIgnoreCase("stop") ||
+                member.getMemberRole().equalsIgnoreCase("stop_entry_only") ||
+                member.getMemberRole().equalsIgnoreCase("stop_exit_only")) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean hasRolePlatform(RelationMember member) {
+        if (member.getMemberRole().equalsIgnoreCase("platform") ||
+                member.getMemberRole().equalsIgnoreCase("platform_entry_only") ||
+                member.getMemberRole().equalsIgnoreCase("platform_exit_only")) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -282,11 +285,11 @@ public class OsmDataHandler {
 
     /**
      * Returns the first node of the way that is contained in scope of the osm data of the pbf file that is read in {@link OSM_Pbf_Reader}
-     *
+     * TODO: funktioniert einwandfrei
      * @param relation
      * @return firstContainedNode
      */
-    private Node getFirstNode(Relation relation) {
+    public Node getFirstNode(Relation relation) {
         Node firstNodeNotNull = null;
         long relationMemberID;
         for (RelationMember member : relation.getMembers()) {
@@ -327,8 +330,8 @@ public class OsmDataHandler {
                 member1.getMemberRole().equalsIgnoreCase("stop_exit_only")) {
             // 2 is platform
             if (member2.getMemberRole().equalsIgnoreCase("platform") ||
-                    member1.getMemberRole().equalsIgnoreCase("platform_entry_only") ||
-                    member1.getMemberRole().equalsIgnoreCase("platform_exit_only")) {
+                    member2.getMemberRole().equalsIgnoreCase("platform_entry_only") ||
+                    member2.getMemberRole().equalsIgnoreCase("platform_exit_only")) {
                 return true;
             }
         }
@@ -337,12 +340,15 @@ public class OsmDataHandler {
 
     /**
      * Calculates the distance in meters of two nodes
-     *
+     * TODO: Funktioniert einwandfrei
      * @param node1
      * @param node2
      * @return distance in meters
      */
     public double calculateDistanceTwoNodes(Node node1, Node node2) {
+        if (node1 == null || node2 == null){
+            return Double.MAX_VALUE;
+        }
         final double p = 0.017453292519943295;    // Math.PI / 180
         double lat1 = node1.getLatitude();
         double lon1 = node1.getLongitude();
@@ -442,6 +448,85 @@ public class OsmDataHandler {
         return getRailwayStops(tramRouteRelations);
     }
 
+    /**
+     * Retrieves stops which are contained in the resepective routes
+     *
+     * @param routeRelations
+     * @return
+     */
+    public ArrayList<Node> getStreetStops(ArrayList<Relation> routeRelations) {
+
+        ArrayList<Node> stops = new ArrayList<Node>();
+        // Additional array for ids for faster lookup
+        ArrayList<Long> stopIDs = new ArrayList<Long>();
+
+        for (Relation busRelation : routeRelations) {
+
+            // Go through all members to retain all nodes which are stops
+            for (RelationMember relationMember : busRelation.getMembers()) {
+                // in that case all stops have been read already
+                if (hasNoRole(relationMember)) break;
+
+                // "Although many people use the role "stop" for the bus stops, the role is now discouraged." - OSM Wiki
+                // bus stops are mapped as a platform (Node, Way, Relation) and sometimes a stop (node) => use the platform
+                if (hasRolePlatform(relationMember) || hasRoleStop(relationMember)) {
+
+                    // Current member is node
+                    if (relationMember.getMemberType() == EntityType.Node) {
+                        // Get the node with all its information
+                        Node stopNode = allNodes.get(relationMember.getMemberId());
+                        // The nodemember of the relation is maybe out of bounds of the osm data so the node is not contained in allNodes
+                        if (stopNode != null) {
+                            long stopNodeID = stopNode.getId();
+                            if (!stopIDs.contains(stopNodeID)) {
+                                // Add station to bus stops list
+                                stops.add(stopNode);
+                                stopIDs.add(stopNodeID);
+                            }
+                        }
+                    }
+                    //current member is way
+                    // Necessary because some bus platforms are mapped as ways
+                    else if (relationMember.getMemberType() == EntityType.Way) {
+                        //Get the first node of the way as representation for the platform
+                        Way platformWay = allWays.get(relationMember.getMemberId());
+                        Node stopNode = getFirstNode(platformWay);
+                        // The nodemember of the relation is maybe out of bounds of the osm data so the node is not contained in allNodes
+                        if (stopNode != null) {
+                            long stopNodeID = stopNode.getId();
+                            if (!stopIDs.contains(stopNodeID)) {
+                                // Add station to bus stops list
+                                stops.add(stopNode);
+                                stopIDs.add(stopNodeID);
+                            }
+                        }
+                    }
+
+                    //current member is a relation
+                    // Necessary because some platforms are mapped as relations (these platforms have tags public_transport=platform!)
+                    else if (relationMember.getMemberType() == EntityType.Relation) {
+                        // Add the relation platform only for buses because for trains have a corresponding stop node that is used
+                        //Get the first node of the relation for the platform representation
+                        Relation platformRelation = platformRelations.get(relationMember.getMemberId());
+                        if (platformRelation != null) {
+                            Node stopNode = getFirstNode(platformRelation);
+                            // The nodemember of the relation is maybe out of bounds of the osm data so the node is not contained in allNodes
+                            if (stopNode != null) {
+                                long stopNodeID = stopNode.getId();
+                                if (!stopIDs.contains(stopNodeID)) {
+                                    // Add station to bus stops list
+                                    stops.add(stopNode);
+                                    stopIDs.add(stopNodeID);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return stops;
+    }
+
 
     /**
      * Retrieves stops which are contained in the resepective routes
@@ -457,9 +542,7 @@ public class OsmDataHandler {
             // Go through all members to retain all nodes which are stops
             for (RelationMember relationMember : busRelation.getMembers()) {
                 // Current member is node
-                if (relationMember.getMemberRole().equalsIgnoreCase("stop") ||
-                        relationMember.getMemberRole().equalsIgnoreCase("stop_exit_only") ||
-                        relationMember.getMemberRole().equalsIgnoreCase("stop_entry_only")) {
+                if (hasRoleStop(relationMember)) {
                     if (relationMember.getMemberType() == EntityType.Node) {
                         // "Although many people use the role "stop" for the bus stops, the role is now discouraged." - OSM Wiki
                         // bus stops are mapped as a platform (Node, Way, Relation) and sometimes a stop (node) => use the platform

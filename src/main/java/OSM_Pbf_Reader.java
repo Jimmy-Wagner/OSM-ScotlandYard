@@ -53,6 +53,11 @@ public class OSM_Pbf_Reader implements Sink {
         } else if (entityContainer instanceof RelationContainer) {
             Relation currentRelation = ((RelationContainer) entityContainer).getEntity();
             organizeRelations(currentRelation);
+            for (RelationMember member: currentRelation.getMembers()){
+                if (member == null){
+                    System.out.println("Es gibt null member!");
+                }
+            }
         }
         //FIXME: Save bounds and check if chosen center of map with zoomlevel is inside this bounds
         else if (entityContainer instanceof BoundContainer) {

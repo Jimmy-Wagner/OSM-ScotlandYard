@@ -51,7 +51,7 @@ public class ImageFrame extends JComponent{
      */
     public void drawPoints(ArrayList<Node> points, Color color, Font font){
 
-        System.out.println("drawPoints() inside:");;
+        //System.out.println("drawPoints() inside:");;
         g.setColor(color);
         g.setFont(font);
         // Draw each point on the map image
@@ -60,12 +60,12 @@ public class ImageFrame extends JComponent{
             // contains the x and y pixel coordinate for the point to draw
             double [] pixelXY = convertGeoToPixel(point.getLatitude(), point.getLongitude());
             //FIXME: pointNumber++
-            g.drawString(Integer.toString(pointNumber), (int)pixelXY[0], (int)pixelXY[1]);
-            System.out.println("Number: " + pointNumber++);
+            g.drawString(Integer.toString(pointNumber++), (int)pixelXY[0], (int)pixelXY[1]);
+            /*System.out.println("Number: " + pointNumber++);
             for (Tag tag: point.getTags()){
                 System.out.println(tag.getKey() + ": " + tag.getValue());
             }
-            System.out.println("X: " + point.getLongitude() + " | Y: " + point.getLatitude());
+            System.out.println("X: " + point.getLongitude() + " | Y: " + point.getLatitude());*/
         }
     }
 

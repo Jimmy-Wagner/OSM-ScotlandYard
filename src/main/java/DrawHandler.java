@@ -369,6 +369,7 @@ public class DrawHandler {
         ArrayList<Node> containedNodes = new ArrayList<Node>();
         boolean firstNodeToAdd = true;
         for (Node currentNodeToCheck: nodes){
+            if (currentNodeToCheck == null) break;
             if (currentNodeToCheck.getLatitude() < boundingbox[1]){
                 if(!firstNodeToAdd){
                     break;
