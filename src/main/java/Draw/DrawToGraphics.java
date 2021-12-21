@@ -1,11 +1,11 @@
-package Revise;
+package Draw;
 
+import DataContainer.ImageData;
 import org.openstreetmap.osmosis.core.domain.v0_6.Bound;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class DrawToGraphics {

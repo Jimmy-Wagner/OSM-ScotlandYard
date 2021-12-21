@@ -1,5 +1,7 @@
-package Revise;
+package DataManipulation;
 
+import DataContainer.OsmDataContainer;
+import DataContainer.RelationMemberHelper;
 import org.openstreetmap.osmosis.core.domain.v0_6.Relation;
 import org.openstreetmap.osmosis.core.domain.v0_6.RelationMember;
 

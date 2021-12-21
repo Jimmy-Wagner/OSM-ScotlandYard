@@ -1,11 +1,13 @@
-package Revise;
+package DataManipulation;
 
+import DataContainer.OsmDataContainer;
+import DataContainer.RelationMemberHelper;
+import Types.TrimmedWay;
 import org.openstreetmap.osmosis.core.domain.v0_6.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 
 public class WayHandler {
 
@@ -121,17 +123,6 @@ public class WayHandler {
         }
         mergedTrimmedWays.add(lastWay);
         return mergedTrimmedWays;
-    }
-
-
-    /**
-     * Returns the id of the way nodes for a way given by its id
-     * @param wayId
-     * @return list of ids of waynodes
-     */
-    private ArrayList<Long> getWayNodeIds(long wayId){
-        Way fullWay = this.dataContainer.getFullWayById(wayId);
-        return (ArrayList) fullWay.getWayNodes();
     }
 
 

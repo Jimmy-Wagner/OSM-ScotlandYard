@@ -1,4 +1,4 @@
-package Revise;
+package DataPresentation;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,4 +1,4 @@
-package Revise;
+package APIs;
 
 import com.mapbox.api.geocoding.v5.MapboxGeocoding;
 import com.mapbox.api.geocoding.v5.models.GeocodingResponse;

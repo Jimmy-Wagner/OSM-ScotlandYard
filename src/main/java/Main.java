@@ -1,4 +1,16 @@
-import Revise.*;
+import APIs.GeoApiCaller;
+import APIs.ImageApiCaller;
+import DataContainer.ImageData;
+import DataContainer.OsmDataContainer;
+import DataManipulation.OsmDataHandler;
+import DataPresentation.ImageFrame;
+import DataReader.ConsoleDialog;
+import DataReader.PbfFileReader;
+import Draw.DrawHandler;
+import Draw.DrawToGraphics;
+import Types.DetailsOfRoute;
+import Types.RouteType;
+import com.mapbox.geojson.Point;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -6,37 +18,48 @@ import java.util.ArrayList;
 public class Main {
     public static void main(String[] args) {
 
-        // TODO: 1. Read pbf file
-        OSM_Pbf_Reader reader = new OSM_Pbf_Reader();
-        //TODO: read path to input file
-        OsmDataHandler dataHandler = reader.readOsmPbfFile();
-
-        // TODO: 2. Let user select address
-        GeoApiCaller geocoder = new GeoApiCaller();
+        // 1. Read the location of the map
         String address = ConsoleDialog.selectAddress();
-        geocoder.callApiAsynchronously(address);
-        // Wait for api response of geocoder
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
-        ImageData imageData = new ImageData(geocoder.getCameraPoint());
-        //TODO: 3. Send api call for image of selected center
+        // 2. Retrieve the latitude and longitude of this address
+        GeoApiCaller geoApiCaller = new GeoApiCaller();
+        Point pointOfAddress = geoApiCaller.callApiSycnhrounisly(address);
+
+        // 3. Prepare information to retrieve the map image
+        ImageData imageData = new ImageData(pointOfAddress);
+
+        // 4. Call the api for the image of the map
         ImageApiCaller imageApiCaller = new ImageApiCaller(imageData);
-        BufferedImage staticImage = imageApiCaller.callApi();
-        ImageFrame imageFrame = new ImageFrame(staticImage, imageData.getPIXELWIDTH(), imageData.getPIXELHEIGHT());
+        BufferedImage mapImage = imageApiCaller.callApi();
 
-        // 1= bus, 10= trolleybus, 100=train, 1000=tram, 10000=subway, 100000=lightrail, 1000000=monorail
-        ArrayList<RouteType> routeType = ConsoleDialog.selectRouteTypes();
-        DetailsOfRoute stopsOrRoutes = ConsoleDialog.selectStopsOrRoutes();
+        // 5. Read the necessary osm data
+        PbfFileReader reader = new PbfFileReader(imageData.getBoundingBox());
+        OsmDataContainer dataContainer =
+                reader.readFile("/Users/jimmy/Desktop/london/0.publictransportRoutesAllInclusive.osm.pbf");
+        // london/0.publictransportRoutesAllInclusive.osm.pbf
+        // Stuttgart/stuttgart-publicTransport.osm.pbf
+        // Bietigheim/test.osm.pbf
 
-        //TODO: 4. Draw stops and routes on image
-        //DrawHandler drawHandler = new DrawHandler(imageFrame, imageData, dataHandler, routeType, stopsOrRoutes);
-        //drawHandler.draw();
+        // 6. Create Data Handler for extracting information from the relations
+        OsmDataHandler dataHandler = new OsmDataHandler(dataContainer);
 
-        imageFrame.setVisible();
+        // 7. Create the new image frame and draw object of that frame
+        ImageFrame frame = new ImageFrame(mapImage, imageData.getPIXELWIDTH()+100,
+                imageData.getPIXELHEIGHT()+100);
+        DrawToGraphics drawToGraphics = new DrawToGraphics(frame.getG(), imageData);
 
+        // 7. Select what to draw
+        ArrayList<RouteType> routeTypes = ConsoleDialog.selectRouteTypes();
+        DetailsOfRoute detailsOfRoute = ConsoleDialog.selectStopsOrRoutes();
+
+        System.out.println("Wait for drawing please!");
+
+        // 8. draw selected stops and routes
+        DrawHandler drawHandler = new DrawHandler(drawToGraphics, dataHandler);
+        drawHandler.draw(detailsOfRoute, routeTypes);
+
+        // last. make frame visible
+        frame.setVisible();
+        System.out.println("Ready to view!");
     }
 }

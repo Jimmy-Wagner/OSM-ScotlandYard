@@ -1,6 +1,4 @@
-package Revise;
-
-import org.openstreetmap.osmosis.core.domain.v0_6.Node;
+package Types;
 
 import java.util.ArrayList;
 

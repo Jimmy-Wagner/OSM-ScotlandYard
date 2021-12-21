@@ -1,6 +1,6 @@
-package Revise;
+package APIs;
 
-import Revise.ImageData;
+import DataContainer.ImageData;
 import com.mapbox.api.staticmap.v1.MapboxStaticMap;
 import com.mapbox.api.staticmap.v1.StaticMapCriteria;
 

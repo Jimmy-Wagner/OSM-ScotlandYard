@@ -1,7 +1,9 @@
-package Revise;
+package DataReader;
+
+import Types.DetailsOfRoute;
+import Types.RouteType;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Scanner;
 
 /**

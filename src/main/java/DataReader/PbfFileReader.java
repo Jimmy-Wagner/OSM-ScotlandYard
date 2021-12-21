@@ -1,4 +1,4 @@
-package Revise;
+package DataReader;
 
 
 import java.io.FileInputStream;
@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import DataContainer.OsmDataContainer;
 import org.openstreetmap.osmosis.core.container.v0_6.*;
 import org.openstreetmap.osmosis.core.domain.v0_6.*;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;

@@ -1,11 +1,10 @@
-package Revise;
+package HelperClasses;
 
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
 
 public class DistanceCalculator {
     /**
      * Calculates the distance in meters of two nodes
-     * TODO: Funktioniert einwandfrei
      *
      * @param node1
      * @param node2

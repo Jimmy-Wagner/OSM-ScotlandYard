@@ -1,5 +1,6 @@
-package Revise;
+package DataContainer;
 
+import DataReader.PbfFileReader;
 import org.openstreetmap.osmosis.core.domain.v0_6.*;
 
 
@@ -42,7 +43,7 @@ public class OsmDataContainer {
     private HashMap<Long, Long> platformToPlatformNodeMapping = new HashMap<Long, Long>();
 
 
-    protected OsmDataContainer(Bound imageBoundingbox,
+    public OsmDataContainer(Bound imageBoundingbox,
                                Bound osmDataBoundingBox,
                                HashMap<Long, Node> allContainedNodes,
                                HashMap<Long, Way> allContainedWays,
@@ -232,20 +233,14 @@ public class OsmDataContainer {
         return allContainedWays.get(id);
     }
 
-    public void setOsmDataBoundingBox(Bound osmDataBoundingBox) {
-        this.osmDataBoundingBox = osmDataBoundingBox;
-    }
 
     public HashMap<Long, Node> getAllContainedNodes() {
         return allContainedNodes;
     }
 
+    // TODO: Check if osm bounding box is covering image bounding box
     public Bound getOsmDataBoundingBox() {
         return osmDataBoundingBox;
-    }
-
-    public HashMap<Long, Way> getAllContainedWays() {
-        return allContainedWays;
     }
 
     public HashSet<Relation> getBusRouteRelations() {
@@ -270,10 +265,6 @@ public class OsmDataContainer {
 
     public HashSet<Relation> getMonorailRouteRelations() {
         return monorailRouteRelations;
-    }
-
-    public HashMap<Long, Relation> getPlatformRelations() {
-        return platformRelations;
     }
 
     public Bound getImageBoundingbox() {

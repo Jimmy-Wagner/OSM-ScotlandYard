@@ -1,4 +1,4 @@
-package Revise;
+package Types;
 
 public enum DetailsOfRoute {
     HALT,

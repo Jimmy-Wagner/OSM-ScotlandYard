@@ -1,4 +1,4 @@
-package Revise;
+package DataContainer;
 
 import org.openstreetmap.osmosis.core.domain.v0_6.EntityType;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
@@ -6,7 +6,6 @@ import org.openstreetmap.osmosis.core.domain.v0_6.RelationMember;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
 
 import java.util.HashMap;
-import java.util.HashSet;
 
 /**
  * This class provides helper functions for Relation members which are only given by their id.

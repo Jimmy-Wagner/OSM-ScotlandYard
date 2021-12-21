@@ -1,5 +1,10 @@
-package Revise;
+package Draw;
 
+import DataManipulation.OsmDataHandler;
+import HelperClasses.ColorPicker;
+import Types.DetailsOfRoute;
+import Types.RouteType;
+import Types.TrimmedWay;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
 
 import java.awt.*;
