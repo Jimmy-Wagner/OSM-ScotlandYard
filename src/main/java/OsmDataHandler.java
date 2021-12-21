@@ -29,10 +29,25 @@ public class OsmDataHandler {
     }
 
     // Stops are mapped to their own id
-    // PLatforms are mapped to their first node or the coherent stopNode
+    // Platforms are mapped to their first node or the coherent stopNode
+    // Platforms and stops that are not contained in the osm data are not contained
     private HashMap<Long, Long> platformToStopNodeMappingBus;
-    private HashMap<Long, Long> platfromToStopMappingSubway;
 
+    public HashMap<Long, Long> getPlatformToPlatformMappingBus() {
+        return platformToPlatformMappingBus;
+    }
+
+    private HashMap<Long, Long> platformToPlatformMappingBus;
+    private HashMap<Long, Long> platformToStopMappingSubway;
+    private HashMap<Long, Integer> busStopDegrees;
+    private HashMap<Long, Integer> subwayStopDegrees;
+
+    // Not only the contained stops and platforms
+    private HashSet<Long> allBusStopsAndPlatformIds;
+
+    public HashSet<Long> getAllBusStopsAndPlatformIds() {
+        return allBusStopsAndPlatformIds;
+    }
 
     /**
      * Initialization of the Data through {@link OSM_Pbf_Reader}
@@ -66,7 +81,11 @@ public class OsmDataHandler {
         this.platformRelations = platformRelations;
         // Initialize this list
         platformToStopNodeMappingBus = new HashMap<Long, Long>();
-        platfromToStopMappingSubway = new HashMap<Long, Long>();
+        platformToPlatformMappingBus = new HashMap<Long, Long>();
+        platformToStopMappingSubway = new HashMap<Long, Long>();
+        busStopDegrees = new HashMap<Long, Integer>();
+        subwayStopDegrees = new HashMap<Long, Integer>();
+        allBusStopsAndPlatformIds = new HashSet<Long>();
     }
 
 
@@ -76,7 +95,7 @@ public class OsmDataHandler {
      * @return mergedStops
      */
     public ArrayList<Node> getStreetBusStopsRichtig() {
-        return getStreetStopsRichtig(busRouteRelations, platformToStopNodeMappingBus);
+        return getStreetStopsRichtig(busRouteRelations, platformToStopNodeMappingBus, platformToPlatformMappingBus);
     }
 
     /**
@@ -84,7 +103,7 @@ public class OsmDataHandler {
      * @return mergedStops
      */
     public ArrayList<Node> getSubwayStopsRichtig() {
-        return getStreetStopsRichtig(subwayRouteRelations, platformToStopNodeMappingBus);
+        return getStreetStopsRichtig(subwayRouteRelations, platformToStopMappingSubway, platformToPlatformMappingBus);
     }
 
 
@@ -94,7 +113,9 @@ public class OsmDataHandler {
      * @param routeRelations
      * @return mergedStreetStops stops that are mapped as platform and stop are merged to one stop
      */
-    private ArrayList<Node> getStreetStopsRichtig(ArrayList<Relation> routeRelations, HashMap<Long, Long> platformToStopNodeMapping) {
+    private ArrayList<Node> getStreetStopsRichtig(ArrayList<Relation> routeRelations,
+                                                  HashMap<Long, Long> platformToStopNodeMapping,
+                                                  HashMap<Long, Long> platformToPlatformMapping) {
         ArrayList<Node> stops = new ArrayList<Node>();
         // Additional array for ids for faster lookup
         ArrayList<Long> stopIDs = new ArrayList<Long>();
@@ -103,10 +124,8 @@ public class OsmDataHandler {
         RelationMember lastMember;
         boolean mergeable;
 
-
         for (Relation currentRelation : routeRelations) {
             lastMember = null;
-
             // Go through all members to retain all nodes which are stops
             for (RelationMember relationMember : currentRelation.getMembers()) {
                 // in that case all stops have been read already
@@ -115,8 +134,11 @@ public class OsmDataHandler {
                 // "Although many people use the role "stop" for the bus stops, the role is now discouraged." - OSM Wiki
                 // bus stops are mapped as a platform (Node, Way, Relation) and sometimes a stop (node) => use the platform
                 if (hasRolePlatform(relationMember) || hasRoleStop(relationMember)) {
-
-
+                    if (platformToPlatformMapping.get(relationMember.getMemberId()) == null){
+                        platformToPlatformMapping.put(relationMember.getMemberId(), relationMember.getMemberId());
+                    }
+                    // Add all stops and platforms to this Set
+                    allBusStopsAndPlatformIds.add(relationMember.getMemberId());
                     // Current member is node
                     if (relationMember.getMemberType() == EntityType.Node) {
                         // Get the node with all its information
@@ -184,6 +206,8 @@ public class OsmDataHandler {
                                 removeableStops.add(currentFullNode);
                                 // Map the current platform to the coherent stop node
                                 platformToStopNodeMapping.put(relationMember.getMemberId(), lastFullNode.getId());
+
+                                platformToPlatformMapping.put(relationMember.getMemberId(), lastFullNode.getId());
                             }
                         }
                     } else if (relationMember.getMemberType() == EntityType.Way) {
@@ -194,6 +218,7 @@ public class OsmDataHandler {
                             if (mergeable && !removeableStops.contains(stopNode)) {
                                 removeableStops.add(stopNode);
                                 platformToStopNodeMapping.put(relationMember.getMemberId(), lastFullNode.getId());
+                                platformToPlatformMapping.put(relationMember.getMemberId(), lastFullNode.getId());
                             }
                         }
                     } else if (relationMember.getMemberType() == EntityType.Relation) {
@@ -205,6 +230,7 @@ public class OsmDataHandler {
                                 if (mergeable && !removeableStops.contains(stopNode)) {
                                     removeableStops.add(stopNode);
                                     platformToStopNodeMapping.put(relationMember.getMemberId(), lastFullNode.getId());
+                                    platformToPlatformMapping.put(relationMember.getMemberId(), lastFullNode.getId());
                                 }
                             }
                         }

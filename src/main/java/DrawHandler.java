@@ -1,3 +1,7 @@
+import Revise.DetailsOfRoute;
+import Revise.ImageData;
+import Revise.ImageFrame;
+import org.openstreetmap.osmosis.core.domain.v0_6.Bound;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
 import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
@@ -9,21 +13,21 @@ import java.util.List;
 
 public class DrawHandler {
     private ImageFrame imageFrame;
-    private double[] boundingbox;
+    private Bound boundingbox;
     private int routeType;
-    private int stopsOrRoutes;
+    private DetailsOfRoute stopsOrRoutes;
     private OsmDataHandler dataHandler;
 
-    public DrawHandler(ImageFrame imageFrame, ImageData imageData, OsmDataHandler dataHandler, int routeType ,int stopsOrRoutes){
+    public DrawHandler(ImageFrame imageFrame, ImageData imageData, OsmDataHandler dataHandler, int routeType , DetailsOfRoute stopsOrRoutes){
         this.imageFrame = imageFrame;
-        this.boundingbox = imageData.getBoundingbox();
+        this.boundingbox = imageData.getBoundingBox();
         this.dataHandler = dataHandler;
         this.routeType = routeType;
         this.stopsOrRoutes = stopsOrRoutes;
     }
 
     /**
-     * This method starts the drawing on the image in the ImageFrame
+     * This method starts the drawing on the image in the Revise.ImageFrame
      */
     public void draw(){
         switch (routeType){
@@ -129,7 +133,15 @@ public class DrawHandler {
      */
     private void drawBus(){
         ArrayList<Node> stops = dataHandler.getStreetBusStopsRichtig();
-        System.out.println("drawBus() | size of busstoplist: " + stops.size());
+        System.out.println("Anzahl stops Beginn: " + stops.size());
+        // Thin out this stops
+        ThinOut thinOut = new ThinOut(dataHandler);
+        /*stops = thinOut.thinOutStops(stops,
+                dataHandler.getPlatformToStopNodeMappingBus(),
+                dataHandler.getPlatformToPlatformMappingBus(),
+                dataHandler.getAllBusStopsAndPlatformIds(),
+                dataHandler.getBusRouteRelations());
+        System.out.println("Anzahl an stops nach thinout " + stops.size());*/
         ArrayList<Way> routeWays = dataHandler.getBusRouteWays();
         actualDrawMethod(stops, routeWays, 1);
     }
@@ -141,18 +153,18 @@ public class DrawHandler {
 
         switch (stopsOrRoutes){
             //case only stops
-            case 0:
+            case HALT:
                 // get rid of the stops that are not contained in the image
                 stops = checkForBoundingBox(stops);
                 // Pick color based on routetype for stops
                 color = pickColorForStop(routeType);
                 // Draw stops in picked color on image map
-                imageFrame.drawPoints(stops, color, new Font("TimesRoman", Font.PLAIN, 20));
+                // TODO: imageFrame.drawPoints(stops, color, new Font("TimesRoman", Font.PLAIN, 20));
                 // Safe storage
                 stops.clear();
                 break;
             // only routes without stops
-            case 1:
+            case ROUTE:
                 // get rid of the stops that are not contained in the image
                 routeWays = trimWaysToBoundingBox(routeWays);
 
@@ -163,11 +175,11 @@ public class DrawHandler {
                     for (WayNode currentNode: currentWay.getWayNodes()){
                         oneWay.add(allNodes.get(currentNode.getNodeId()));
                     }
-                    imageFrame.drawWay(oneWay, color);
+                    //TODO: imageFrame.drawWay(oneWay, color);
                     oneWay.clear();
                 }
                 break;
-            case 2:
+            case HALTANDROUTE:
                 stops = checkForBoundingBox(stops);
                 // get rid of the stops that are not contained in the image
                 routeWays = trimWaysToBoundingBox(routeWays);
@@ -178,11 +190,11 @@ public class DrawHandler {
                     for (WayNode currentNode: currentWay.getWayNodes()){
                         oneWay.add(allNodes.get(currentNode.getNodeId()));
                     }
-                    imageFrame.drawWay(oneWay, color);
+                    //TODO: imageFrame.drawWay(oneWay, color);
                     oneWay.clear();
                 }
                 color = pickColorForStop(routeType);
-                imageFrame.drawPoints(stops, color, new Font("TimesRoman", Font.PLAIN, 20));
+                // TODO: imageFrame.drawPoints(stops, color, new Font("TimesRoman", Font.PLAIN, 20));
                 break;
             default: break;
         }
@@ -337,16 +349,16 @@ public class DrawHandler {
             if(currentNodeToCheck == null){
                 break;
             }
-            if (currentNodeToCheck.getLatitude() < boundingbox[1]){
+            if (currentNodeToCheck.getLatitude() < boundingbox.getBottom()){
                 continue;
             }
-            if(currentNodeToCheck.getLatitude() > boundingbox[3]){
+            if(currentNodeToCheck.getLatitude() > boundingbox.getTop()){
                 continue;
             }
-            if(currentNodeToCheck.getLongitude() < boundingbox[0]){
+            if(currentNodeToCheck.getLongitude() < boundingbox.getLeft()){
                 continue;
             }
-            if(currentNodeToCheck.getLongitude() > boundingbox[2]){
+            if(currentNodeToCheck.getLongitude() > boundingbox.getRight()){
                 continue;
             }
             // Now the node is contained in the boundingbox
@@ -371,21 +383,21 @@ public class DrawHandler {
         boolean firstNodeToAdd = true;
         for (Node currentNodeToCheck: nodes){
             if (currentNodeToCheck == null) break;
-            if (currentNodeToCheck.getLatitude() < boundingbox[1]){
+            if (currentNodeToCheck.getLatitude() < boundingbox.getBottom()){
                 if(!firstNodeToAdd){
                     break;
                 }
                 continue;
             }
-            if(currentNodeToCheck.getLatitude() > boundingbox[3]){
+            if(currentNodeToCheck.getLatitude() > boundingbox.getTop()){
                 if(!firstNodeToAdd)break;
                 continue;
             }
-            if(currentNodeToCheck.getLongitude() < boundingbox[0]){
+            if(currentNodeToCheck.getLongitude() < boundingbox.getLeft()){
                 if(!firstNodeToAdd)break;
                 continue;
             }
-            if(currentNodeToCheck.getLongitude() > boundingbox[2]){
+            if(currentNodeToCheck.getLongitude() > boundingbox.getRight()){
                 if(!firstNodeToAdd)break;
                 continue;
             }
@@ -401,5 +413,4 @@ public class DrawHandler {
         //System.out.println("Number of nodes am Ende von checkBoudningBox " + containedNodes.size());
         return containedNodes;
     }
-
 }

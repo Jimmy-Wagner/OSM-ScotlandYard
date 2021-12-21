@@ -8,10 +8,13 @@ import java.util.Set;
 
 public class Test {
     public static void main(String[] args) {
-        OSM_Pbf_Reader reader = new OSM_Pbf_Reader();
-        OsmDataHandler handler = reader.readOsmPbfFile();
-
-
+        TestData testData = new TestData();
+        HashSet<Long> hi = new HashSet<Long>();
+        hi.add(null);
+        hi = null;
+        for(long hik:hi){
+            int i = 0;
+        }
 
     }
 }

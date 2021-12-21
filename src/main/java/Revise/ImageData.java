@@ -1,4 +1,7 @@
+package Revise;
+
 import com.mapbox.geojson.Point;
+import org.openstreetmap.osmosis.core.domain.v0_6.Bound;
 
 /**
  * This class contains all the necessary data of static image that is fetched with {@link ImageApiCaller}.
@@ -6,10 +9,10 @@ import com.mapbox.geojson.Point;
  */
 public class ImageData {
     // Zoom level for the map image. This determines the size of the bounding box.
+    // zoomlevel in leaflet = this zoom level + 1
     private final float ZOOMLEVEL = 13f;
-    // [lon(min),lat(min),lon(max),lat(max)] for apicall
-    // [west, south, east, north]
-    private double [] boundingbox;
+    // Bounding box of the image map
+    private Bound boundingBox;
     // width and height of the returned image
     private final int PIXELWIDTH = 1200;
     private final int PIXELHEIGHT = 1200;
@@ -22,22 +25,16 @@ public class ImageData {
      */
     public ImageData(Point cameraPoint){
         this.cameraPoint = cameraPoint;
-        this.boundingbox = calculateBoundingBox(cameraPoint);
+        this.boundingBox = calculateBoundingBoxNew(cameraPoint);
     }
 
-    /**
-     * @return boundingbox of the image which has been retrieved in lat,lon
-     */
-    public double[] getBoundingbox(){
-        return boundingbox;
-    }
 
     /**
-     * This method calculates the bounding box in lat, lon by a given image size in pixels, a center coordinate and a zoomlevel.
+     * This method calculates the bounding box in latitude and longitude by a given image size in pixels, a center coordinate and a zoomlevel.
      * @param cameraPoint
-     * @return
+     * @return boundingBox
      */
-    private double[] calculateBoundingBox(Point cameraPoint){
+    private Bound calculateBoundingBoxNew(Point cameraPoint){
         double lat = cameraPoint.latitude();
         double lng = cameraPoint.longitude();
         // For calculation of bounding box
@@ -45,7 +42,7 @@ public class ImageData {
         final double  degreesPerMeter = 360 / EARTH_CIR_METERS;
         // ZOOMLEVEL + 1 because somehow the mapbox api returns one zoom less
         double metersPerPixelEW = EARTH_CIR_METERS / Math.pow(2, ZOOMLEVEL+1 + 8);
-        double metersPerPixelNS = EARTH_CIR_METERS / Math.pow(2, ZOOMLEVEL+1 + 8) * Math.cos(toRadians(lat));
+        double metersPerPixelNS = metersPerPixelEW * Math.cos(toRadians(lat));
 
         double shiftMetersEW = (PIXELWIDTH/2) * metersPerPixelEW;
         double shiftMetersNS = (PIXELHEIGHT/2) * metersPerPixelNS;
@@ -53,16 +50,17 @@ public class ImageData {
         double shiftDegreesEW = shiftMetersEW * degreesPerMeter;
         double shiftDegreesNS = shiftMetersNS * degreesPerMeter;
 
-        double [] returnValue = new double[4];
-        returnValue[0] = lng-shiftDegreesEW;
-        returnValue[1] = lat-shiftDegreesNS;
-        returnValue[2] = lng+shiftDegreesEW;
-        returnValue[3] = lat+shiftDegreesNS;
 
+        double left = lng-shiftDegreesEW;
+        double bottom = lat-shiftDegreesNS;
+        double right = lng+shiftDegreesEW;
+        double top = lat+shiftDegreesNS;
 
-        // [east, south, west, north]
-        return returnValue;
+        Bound bound = new Bound(right, left, top, bottom, "");
+
+        return bound;
     }
+
 
     /**
      * This method is a helper function for the calculation of the bounding box
@@ -87,5 +85,9 @@ public class ImageData {
 
     public Point getCameraPoint() {
         return cameraPoint;
+    }
+
+    public Bound getBoundingBox() {
+        return boundingBox;
     }
 }

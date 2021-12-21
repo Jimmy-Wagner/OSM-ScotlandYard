@@ -1,3 +1,6 @@
+package Revise;
+
+import Revise.ImageData;
 import com.mapbox.api.staticmap.v1.MapboxStaticMap;
 import com.mapbox.api.staticmap.v1.StaticMapCriteria;
 
@@ -28,7 +31,7 @@ public class ImageApiCaller {
      * @return static map image
      */
     public BufferedImage callApi() {
-        String urlAsString = constructUrlFromZoom();
+        String urlAsString = constructUrl();
         // variable for retrieved image
         BufferedImage image = null;
         // Try to read image from url
@@ -42,11 +45,11 @@ public class ImageApiCaller {
     }
 
     /**
-     * Constructs an url for the api call
+     * Constructs an url for the api call.
      *
      * @return url
      */
-    private String constructUrlFromZoom() {
+    private String constructUrl() {
         MapboxStaticMap staticImage = MapboxStaticMap.builder()
                 .accessToken(ACCESS_TOKEN)
                 .styleId(MAPSTYLE)
