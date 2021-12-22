@@ -44,12 +44,10 @@ public class RelationMemberHelper {
             return allNodes.get(memberId);
         }
         else if (memberType == EntityType.Way){
-            long firstWayNodeId = dataContainer.getFirstContainedWayNodeId(memberId);
-            return allNodes.get(firstWayNodeId);
+            return dataContainer.getFullNodeOfWayId(memberId);
         }
         else if (memberType == EntityType.Relation){
-            long firstRelationNodeId = dataContainer.getFirstContainedNodeOfPlatformRelation(memberId);
-            return allNodes.get(firstRelationNodeId);
+            return dataContainer.getFullNodeOfRelationId(memberId);
         }
         System.out.println("Haltmeger | getFullNode() Fehler, weder node, way, relation");
         return null;
@@ -75,7 +73,7 @@ public class RelationMemberHelper {
             }
         }
         else if(memberType == EntityType.Way){
-            if (this.dataContainer.isInAllContainedWays(memberId)){
+            if (this.dataContainer.inContainedWays(memberId)){
                 return true;
             }
             else{
@@ -83,7 +81,7 @@ public class RelationMemberHelper {
             }
         }
         else if (memberType == EntityType.Relation){
-            if (this.dataContainer.isInAllContainedPlatformRelations(memberId)){
+            if (this.dataContainer.inContainedPlatformRelations(memberId)){
                 return true;
             }
             else{

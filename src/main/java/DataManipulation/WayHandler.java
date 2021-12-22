@@ -50,7 +50,8 @@ public class WayHandler {
         Way fullWay;
 
         for (RelationMember member:relation.getMembers()){
-            if (member.getMemberType() == EntityType.Way){
+            // Check if it has no role because some platforms are ways and you dont want to draw them in the routes
+            if (member.getMemberType() == EntityType.Way && helper.hasNoRole(member)){
                 // Way is contained in data
                 if (helper.dataContains(member)){
                     fullWay = helper.getFullWay(member);

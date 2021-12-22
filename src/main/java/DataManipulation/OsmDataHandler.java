@@ -48,18 +48,23 @@ public class OsmDataHandler {
     }
 
     /**
-     * Returns a list of fullnodes for a given list of ids of nodes.
+     * Returns a list of fullnodes for a given list of ids of stops or platforms.
+     * Note that a platform can be a relation or a node.
      *
      * @param ids
      * @return list of full nodes
      */
-    public HashSet<Node> getFullNodesForIds(HashSet<Long> ids) {
+    public HashSet<Node> getFullNodesForHalts(HashSet<Long> ids) {
+        Node fullNode;
         HashSet<Node> fullNodes = new HashSet<Node>();
         for (long id : ids) {
-            fullNodes.add(allNodes.get(id));
+            fullNode = dataContainer.getFullNodeByid(id);
+            fullNodes.add(fullNode);
         }
         return fullNodes;
     }
+
+
 
 
     /**
@@ -83,8 +88,6 @@ public class OsmDataHandler {
     public HashSet<Node> getMergedHalts(RouteType routeType) {
         return getMergedHalts(getRelationsByType(routeType));
     }
-
-
     /**
      * Get all stop nodes and all platform nodes that have no corresponding stop node.
      * The platforms that have a corresponding stop node are merged into that stopnode.
@@ -95,14 +98,54 @@ public class OsmDataHandler {
     public HashSet<Node> getMergedHalts(HashSet<Relation> routeRelations) {
         HashSet<Long> unmergedIds = extractAllContainedStopAndPlatformIDs(routeRelations);
         HashSet<Long> mergedIds = haltMerger.getMergedHalts(unmergedIds, routeRelations);
-        HashSet<Node> mergedNodes = getFullNodesForIds(mergedIds);
+        HashSet<Node> mergedNodes = getFullNodesForHalts(mergedIds);
+
+        return mergedNodes;
+    }
+
+
+    public HashSet<Node> getDifference(RouteType type){
+        return getDifference(getRelationsByType(type));
+    }
+
+    public HashSet<Node> getDifference(HashSet<Relation> routeRelations){
+        HashSet<Long> unmergedIds = extractAllContainedStopAndPlatformIDs(routeRelations);
+        HashSet<Long> thinnedMergedIds = haltMerger.getThinnedOutHalts(unmergedIds, routeRelations);
+        HashSet<Long> mergedIds = haltMerger.getMergedHalts(unmergedIds, routeRelations);
+        HashSet<Long> difference = new HashSet<Long>();
+
+        System.out.println("merged size: " + mergedIds.size());
+        System.out.println("thinned size: " + thinnedMergedIds.size());
+        System.out.println("Contains all: " + mergedIds.containsAll(thinnedMergedIds));
+
+        for (long id: mergedIds){
+            if (!thinnedMergedIds.contains(id)){
+                difference.add(id);
+            }
+        }
+
+
+        HashSet<Node> mergedNodes = getFullNodesForHalts(difference);
+
+        return mergedNodes;
+    }
+
+
+    public HashSet<Node> getThinnedMergedHalts(RouteType type){
+        return getThinnedMergedHalts(getRelationsByType(type));
+    }
+
+    public HashSet<Node> getThinnedMergedHalts(HashSet<Relation> routeRelations){
+        HashSet<Long> unmergedIds = extractAllContainedStopAndPlatformIDs(routeRelations);
+        HashSet<Long> mergedIds = haltMerger.getThinnedOutHalts(unmergedIds, routeRelations);
+        HashSet<Node> mergedNodes = getFullNodesForHalts(mergedIds);
 
         return mergedNodes;
     }
 
 
     /**
-     * Returns all ids of platforms (nodes, relations) and stops (node) which are contained in the bounding box of the map image.
+     * Returns all ids of platforms (nodes, ways, relations) and stops (node) which are contained in the bounding box of the map image.
      *
      * @param routeRelations
      * @return contained platform and stop ids
@@ -161,13 +204,8 @@ public class OsmDataHandler {
         HashSet<Node> stopAndPlatformNodes = new HashSet<Node>();
         Node fullNode;
         for (long stopOrPlatformId : containedStopAndPlatformIds) {
-            // To check if its a platform relation or a node (stop or platform node)
-            if (this.dataContainer.isInAllContainedPlatformRelations(stopOrPlatformId)) {
-                fullNode = this.dataContainer.getFullNodeOfRelationId(stopOrPlatformId);
-                stopAndPlatformNodes.add(fullNode);
-            } else {
-                stopAndPlatformNodes.add(allNodes.get(stopOrPlatformId));
-            }
+            fullNode = this.dataContainer.getFullNodeByid(stopOrPlatformId);
+            stopAndPlatformNodes.add(fullNode);
         }
         return stopAndPlatformNodes;
     }

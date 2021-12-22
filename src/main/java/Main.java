@@ -19,7 +19,8 @@ public class Main {
     public static void main(String[] args) {
 
         // 1. Read the location of the map
-        String address = ConsoleDialog.selectAddress();
+        String address = "london";
+                // ConsoleDialog.selectAddress();
 
         // 2. Retrieve the latitude and longitude of this address
         GeoApiCaller geoApiCaller = new GeoApiCaller();

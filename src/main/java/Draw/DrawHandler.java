@@ -60,6 +60,9 @@ public class DrawHandler {
      */
     private void drawHalts(RouteType type){
         HashSet<Node> halts = this.dataHandler.getMergedHalts(type);
+        //HashSet<Node> halts = this.dataHandler.getThinnedMergedHalts(type);
+        //HashSet<Node> halts = this.dataHandler.getDifference(type);
+        // HashSet<Node> halts = this.dataHandler.getAllStopAndPlatformNodes(type);
         this.drawToGraphics.drawNodes(halts, ColorPicker.colorForHalts(type), new Font("TimesRoman", Font.PLAIN, 20));
     }
 
@@ -89,7 +92,7 @@ public class DrawHandler {
                 // trimmedWay can be null when this relation has no ways inside the bounding box (maybe only one stop or something like that)
                 if (trimmedWay != null){
                     wayNodes = getFullNodes(trimmedWay.getWaynodes());
-                    this.drawToGraphics.drawWay(wayNodes, color, 5);
+                    this.drawToGraphics.drawWay(wayNodes, color, 2);
                 }
             }
         }

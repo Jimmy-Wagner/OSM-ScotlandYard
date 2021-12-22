@@ -5,6 +5,7 @@ import DataContainer.RelationMemberHelper;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
 import org.openstreetmap.osmosis.core.domain.v0_6.Relation;
 import org.openstreetmap.osmosis.core.domain.v0_6.RelationMember;
+
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -14,10 +15,12 @@ import java.util.HashSet;
 public class HaltMerger {
 
     private RelationMemberHelper helper;
+    private ThinOut thinOutHelper;
 
 
     public HaltMerger(RelationMemberHelper helper){
         this.helper = helper;
+        this.thinOutHelper = new ThinOut(helper);
     }
 
     /**
@@ -29,11 +32,27 @@ public class HaltMerger {
     public HashSet<Long> getMergedHalts(HashSet<Long> unmergedPlatformAndStopNodeIds, HashSet<Relation> routeRelations){
         HashSet<Long> mergedPlatformAndStopNodeIds = new HashSet<Long>(unmergedPlatformAndStopNodeIds);
         HashMap<Long, Long> platformToStopNodeMapping = createPlatformToStopNodeMapping(routeRelations);
+
         for (long platformId: platformToStopNodeMapping.keySet()){
             mergedPlatformAndStopNodeIds.remove(platformId);
         }
         return mergedPlatformAndStopNodeIds;
     }
+
+    /**
+     * Merges platforms with corresponding stops and gets rid of halts that are connected to less than 3 other halts.
+     * @param unmergedPlatformAndStopNodeIds
+     * @param routeRelations
+     * @return
+     */
+    public HashSet<Long> getThinnedOutHalts(HashSet<Long> unmergedPlatformAndStopNodeIds, HashSet<Relation> routeRelations){
+        HashMap<Long, Long> platformToStopNodeMapping = createPlatformToStopNodeMapping(routeRelations);
+        // Halts are implicitly merged
+        HashSet<Long> thinnedOutHalts = thinOutHelper.thinOutHalts(routeRelations, unmergedPlatformAndStopNodeIds, platformToStopNodeMapping);
+
+        return thinnedOutHalts;
+    }
+
 
     /**
      * Returns only the halts which consist of a platform and a stopnode.
@@ -56,6 +75,7 @@ public class HaltMerger {
      * when there is one.
      * If the platform has no correspondend stopnode in the boundingbox or the platform itself is not in the
      * boduning box the patform is not contained in the keyset of the HashMap.
+     * TODO: Maybe calculate the distance for the nearest node of ways and relations to a node instead of the first node
      * @param routeRelations
      * @return platformToStopNodeMapping
      */
@@ -101,7 +121,7 @@ public class HaltMerger {
      */
     private boolean nearBy(Node node1, Node node2){
         double distance = DistanceCalculator.calculateDistanceTwoNodes(node1, node2);
-        if (distance<=50){
+        if (distance<=100){
             return true;
         }
         else{

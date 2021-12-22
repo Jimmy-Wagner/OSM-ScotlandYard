@@ -20,7 +20,7 @@ public class ConsoleDialog {
     public static ArrayList<RouteType> selectRouteTypes() {
         System.out.println("Do you want route information for 1:bus, 10:train, 100:tram, 1000:subway, 10000:light rail, 100000:monorail");
         System.out.println("Type the sum of the values which you want to select");
-        int routeType = scanner.nextInt();
+        int routeType = 1000;//scanner.nextInt();
         ArrayList<RouteType> selectedTypes = new ArrayList<RouteType>();
         // Whats addded first will be drawn also first
         switch (routeType) {
@@ -69,7 +69,7 @@ public class ConsoleDialog {
      */
     public static DetailsOfRoute selectStopsOrRoutes() {
         System.out.println("Do you want to display 0:stops, routes:1 or both:2");
-        int details = scanner.nextInt();
+        int details = 2;//scanner.nextInt();
         if (details < 0 || details > 2) {
             System.out.println("Fehlerhafte Eingabe!");
         }

@@ -122,7 +122,7 @@ public class OsmDataContainer {
                 // current member is way
                 else if (memberType == EntityType.Way) {
                     // Check if the way is inside the bounds
-                    if (isInAllContainedWays(memberId)) {
+                    if (inContainedWays(memberId)) {
                         // Way member of the relation is inside the image bounds therefore preserve this relation
                         containedPlatformRelations.put(relationId, relation);
                         // Set the corresponded node to the first node of the way that is contained in the bounding box
@@ -136,25 +136,6 @@ public class OsmDataContainer {
 
         return containedPlatformRelations;
     }
-
-    /**
-     * Returns the id of the first node of the way that is contained in the bounding box of the image.
-     * Always check before hand with isInAllContainedWays() if the way is contained in the data !!
-     *
-     * @param wayId
-     * @return first contained node id, 0 if not contained
-     */
-    public long getFirstContainedWayNodeId(long wayId) {
-        Way way = allContainedWays.get(wayId);
-        for (WayNode wayNode : way.getWayNodes()) {
-            if (inContainedNodes(wayNode.getNodeId())) {
-                return wayNode.getNodeId();
-            }
-        }
-        System.out.println("Wanted to retrieve first way node without checking before if way exists in data.");
-        return 0;
-    }
-
 
     /**
      * Checks if a node given by its id is contained in allContainedNodes
@@ -176,7 +157,7 @@ public class OsmDataContainer {
      * @param wayId
      * @return is contained
      */
-    public boolean isInAllContainedWays(long wayId) {
+    public boolean inContainedWays(long wayId) {
         if (allContainedWays.get(wayId) != null) {
             return true;
         } else {
@@ -190,13 +171,41 @@ public class OsmDataContainer {
      * @param relationId
      * @return is contained
      */
-    public boolean isInAllContainedPlatformRelations(long relationId) {
+    public boolean inContainedPlatformRelations(long relationId) {
         if (platformRelations.get(relationId) != null) {
             return true;
         } else {
             return false;
         }
     }
+
+    /**
+     * Returns the id of the first node of the way that is contained in the bounding box of the image.
+     * Always check before hand with isInAllContainedWays() if the way is contained in the data !!
+     *
+     * @param wayId
+     * @return first contained node id, 0 if not contained
+     */
+    public long getFirstContainedWayNodeId(long wayId) {
+        Way way = allContainedWays.get(wayId);
+        for (WayNode wayNode : way.getWayNodes()) {
+            if (inContainedNodes(wayNode.getNodeId())) {
+                return wayNode.getNodeId();
+            }
+        }
+        System.out.println("Wanted to retrieve first way node without checking before if way exists in data.");
+        return 0;
+    }
+
+    /**
+     * Returns the first full node of the way that is contained in the bounding box of the image.
+     * @param wayId
+     * @return first full node of the way
+     */
+    public Node getFullNodeOfWayId(long wayId){
+        return allContainedNodes.get(getFirstContainedWayNodeId(wayId));
+    }
+
 
     /**
      * Returns the first node of a platform relation that is contained in the bounding box of the image.
@@ -219,6 +228,23 @@ public class OsmDataContainer {
         long fullNodeid = getFirstContainedNodeOfPlatformRelation(id);
         Node fullNode = allContainedNodes.get(fullNodeid);
         return fullNode;
+    }
+
+    /**
+     * Returns the full node given by its id.
+     * The id can be of a node, way or relation.
+     * @return full node
+     */
+    public Node getFullNodeByid(long id){
+        if (inContainedNodes(id)){
+            return allContainedNodes.get(id);
+        }
+        else if (inContainedWays(id)){
+            return getFullNodeOfWayId(id);
+        }
+        else {
+            return getFullNodeOfRelationId(id);
+        }
     }
 
 

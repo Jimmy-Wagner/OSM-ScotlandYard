@@ -60,7 +60,7 @@ public class DrawToGraphics {
         for (Node node: nodes){
             drawNode(node, nodeNumber++);
         }
-        System.out.println(nodeNumber + " stops has been drawn");
+        System.out.println(nodeNumber-1 + " stops has been drawn");
     }
 
     /**
@@ -68,9 +68,9 @@ public class DrawToGraphics {
      * @param node
      * @param nodeNumber number of the node on the image
      */
-    private void drawNode(Node node, int nodeNumber){
+    private void drawNode(Node node, long nodeNumber){
         int [] pixelXY = convertGeoNodeToPixelValues(node);
-        graphics2D.drawString(Integer.toString(nodeNumber), pixelXY[0], pixelXY[1]);
+        graphics2D.drawString(Long.toString(nodeNumber), pixelXY[0], pixelXY[1]);
     }
 
     /**
