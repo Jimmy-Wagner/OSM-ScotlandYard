@@ -6,5 +6,10 @@ public enum RouteType {
     SUBWAY,
     MONORAIL,
     LIGHTRAIL,
-    TRAM
+    TRAM,
+    // Subway and train
+    ST,
+    SB,
+    TB,
+    STB
 }

@@ -9,7 +9,7 @@ import java.util.HashSet;
 
 /**
  * This class should only be filled through the {@link PbfFileReader} class.
- * Contains all osm data that is read with {@link PbfFileReader}.
+ * Contains all osm data that is contined in the bounding box of the image and is read with {@link PbfFileReader}.
  */
 public class OsmDataContainer {
     // Provides helper functions for relation members
@@ -197,6 +197,17 @@ public class OsmDataContainer {
         return 0;
     }
 
+
+    /**
+     * Returns the id of the first node of a platform relation that is contained in the bounding box of the image.
+     *
+     * @param relationId
+     * @return nodeId
+     */
+    public Long getFirstContainedNodeOfPlatformRelation(long relationId) {
+        return this.platformToPlatformNodeMapping.get(relationId);
+    }
+
     /**
      * Returns the first full node of the way that is contained in the bounding box of the image.
      * @param wayId
@@ -204,17 +215,6 @@ public class OsmDataContainer {
      */
     public Node getFullNodeOfWayId(long wayId){
         return allContainedNodes.get(getFirstContainedWayNodeId(wayId));
-    }
-
-
-    /**
-     * Returns the first node of a platform relation that is contained in the bounding box of the image.
-     *
-     * @param relationId
-     * @return nodeId
-     */
-    public Long getFirstContainedNodeOfPlatformRelation(long relationId) {
-        return this.platformToPlatformNodeMapping.get(relationId);
     }
 
     /**
@@ -258,6 +258,7 @@ public class OsmDataContainer {
     public Way getFullWayById(long id) {
         return allContainedWays.get(id);
     }
+
 
 
     public HashMap<Long, Node> getAllContainedNodes() {

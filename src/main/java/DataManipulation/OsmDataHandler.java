@@ -1,9 +1,11 @@
 package DataManipulation;
 
+import DataContainer.ImageData;
 import DataContainer.OsmDataContainer;
 import DataContainer.RelationMemberHelper;
-import Types.RouteType;
-import Types.TrimmedWay;
+import DataManipulation.RouteWays.Bentley_Ottman_Algorithmn.Point;
+import Draw.DrawToGraphics;
+import Types.*;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
 import org.openstreetmap.osmosis.core.domain.v0_6.Relation;
 import org.openstreetmap.osmosis.core.domain.v0_6.RelationMember;
@@ -21,62 +23,20 @@ public class OsmDataHandler {
     private OsmDataContainer dataContainer;
     private RelationMemberHelper helper;
     private HaltMerger haltMerger;
-    private WayHandler wayHandler;
+    private WayRetriever wayRetriever;
     private HashMap<Long, Node> allNodes;
+    private ImageData imageData;
+    private WayManipulator wayManipulator;
 
 
-    public OsmDataHandler(OsmDataContainer dataContainer) {
+    public OsmDataHandler(OsmDataContainer dataContainer, ImageData imageData) {
         this.dataContainer = dataContainer;
         this.allNodes = dataContainer.getAllContainedNodes();
         this.helper = new RelationMemberHelper(dataContainer);
         this.haltMerger = new HaltMerger(this.helper);
-        this.wayHandler = new WayHandler(this.dataContainer, this.helper);
-    }
-
-    /**
-     * Returns a list of fullnodes for a given list of ids of nodes.
-     *
-     * @param ids
-     * @return list of full nodes
-     */
-    public ArrayList<Node> getFullNodesForIds(ArrayList<Long> ids) {
-        ArrayList<Node> fullNodes = new ArrayList<Node>();
-        for (long id : ids) {
-            fullNodes.add(allNodes.get(id));
-        }
-        return fullNodes;
-    }
-
-    /**
-     * Returns a list of fullnodes for a given list of ids of stops or platforms.
-     * Note that a platform can be a relation or a node.
-     *
-     * @param ids
-     * @return list of full nodes
-     */
-    public HashSet<Node> getFullNodesForHalts(HashSet<Long> ids) {
-        Node fullNode;
-        HashSet<Node> fullNodes = new HashSet<Node>();
-        for (long id : ids) {
-            fullNode = dataContainer.getFullNodeByid(id);
-            fullNodes.add(fullNode);
-        }
-        return fullNodes;
-    }
-
-
-
-
-    /**
-     * Returns for every relation of the given type its unconnected ways.
-     * Be careful! TrimmedWay can be null for a relation that has no ways in the bounding box! It can
-     * happen that a relation has only one stop in the bounding box and therefore no way.
-     *
-     * @param routeType
-     * @return list of unconnected ways for every relation. (Can be null for some relations!)
-     */
-    public HashMap<Long, ArrayList<TrimmedWay>> getTrimmedWays(RouteType routeType) {
-        return this.wayHandler.getTrimmedWays(getRelationsByType(routeType));
+        this.imageData = imageData;
+        this.wayRetriever = new WayRetriever(this.dataContainer, this.helper, this, imageData.getBoundingBox());
+        this.wayManipulator = new WayManipulator();
     }
 
     /**
@@ -96,53 +56,14 @@ public class OsmDataHandler {
      * @return
      */
     public HashSet<Node> getMergedHalts(HashSet<Relation> routeRelations) {
+        // Ids of all stops and platforms (node / platform ids)
         HashSet<Long> unmergedIds = extractAllContainedStopAndPlatformIDs(routeRelations);
+        // Merge platforms into stops
         HashSet<Long> mergedIds = haltMerger.getMergedHalts(unmergedIds, routeRelations);
         HashSet<Node> mergedNodes = getFullNodesForHalts(mergedIds);
 
         return mergedNodes;
     }
-
-
-    public HashSet<Node> getDifference(RouteType type){
-        return getDifference(getRelationsByType(type));
-    }
-
-    public HashSet<Node> getDifference(HashSet<Relation> routeRelations){
-        HashSet<Long> unmergedIds = extractAllContainedStopAndPlatformIDs(routeRelations);
-        HashSet<Long> thinnedMergedIds = haltMerger.getThinnedOutHalts(unmergedIds, routeRelations);
-        HashSet<Long> mergedIds = haltMerger.getMergedHalts(unmergedIds, routeRelations);
-        HashSet<Long> difference = new HashSet<Long>();
-
-        System.out.println("merged size: " + mergedIds.size());
-        System.out.println("thinned size: " + thinnedMergedIds.size());
-        System.out.println("Contains all: " + mergedIds.containsAll(thinnedMergedIds));
-
-        for (long id: mergedIds){
-            if (!thinnedMergedIds.contains(id)){
-                difference.add(id);
-            }
-        }
-
-
-        HashSet<Node> mergedNodes = getFullNodesForHalts(difference);
-
-        return mergedNodes;
-    }
-
-
-    public HashSet<Node> getThinnedMergedHalts(RouteType type){
-        return getThinnedMergedHalts(getRelationsByType(type));
-    }
-
-    public HashSet<Node> getThinnedMergedHalts(HashSet<Relation> routeRelations){
-        HashSet<Long> unmergedIds = extractAllContainedStopAndPlatformIDs(routeRelations);
-        HashSet<Long> mergedIds = haltMerger.getThinnedOutHalts(unmergedIds, routeRelations);
-        HashSet<Node> mergedNodes = getFullNodesForHalts(mergedIds);
-
-        return mergedNodes;
-    }
-
 
     /**
      * Returns all ids of platforms (nodes, ways, relations) and stops (node) which are contained in the bounding box of the map image.
@@ -165,50 +86,153 @@ public class OsmDataHandler {
         return containedStopAndPlatformIDs;
     }
 
+
     /**
-     * Returns all halts which consist of a platform and a stop node.
+     * Returns a list of fullnodes for a given list of ids of stops or platforms.
+     * Note that a platform can be a relation or a node.
      *
-     * @param routeType
-     * @return halts with platform and stop node
+     * @param ids
+     * @return list of full nodes
      */
-    public HashSet<Node> getOnlyHaltsWithStopAndPlatform(RouteType routeType) {
-        // double halts only contains the stop nodes
-        HashSet<Long> doubleHalts = haltMerger.getOnlyHaltsWithPlatformsAndStops(getRelationsByType(routeType));
-        HashSet<Node> doubleHaltNodes = new HashSet<Node>();
+    public HashSet<Node> getFullNodesForHalts(HashSet<Long> ids) {
         Node fullNode;
-        for (long id : doubleHalts) {
-            fullNode = allNodes.get(id);
-            doubleHaltNodes.add(fullNode);
+        HashSet<Node> fullNodes = new HashSet<Node>();
+        for (long id : ids) {
+            fullNode = dataContainer.getFullNodeByid(id);
+            fullNodes.add(fullNode);
         }
-        return doubleHaltNodes;
+        return fullNodes;
+    }
+
+
+    /**
+     * Returns all intersections of contained ways for routes of the given type.
+     * @param type
+     * @return
+     */
+    public ArrayList<Point> getIntersectionsGeo(RouteType type){
+        ArrayList<TrimmedWay> trimmedWays = getTrimmedWays(type);
+        ArrayList<Point> intersections = this.wayRetriever.getWayIntersectionsGeo(trimmedWays);
+        System.out.println(intersections.size() + " intersections");
+        return intersections;
     }
 
     /**
-     * Return all platform nodes and stop nodes without merging platforms into corresponding stop nodes.
+     * Returns all intersections of contained ways for routes of the given type.
+     * @param type
+     * @return
+     */
+    public ArrayList<Point> getIntersectionsPixel(RouteType type){
+        ArrayList<TrimmedWay> trimmedWays = getTrimmedWays(type);
+        ArrayList<Point> intersections = this.wayRetriever.getWayIntersectionsPixel(trimmedWays);
+        System.out.println(intersections.size() + " intersections");
+        return intersections;
+    }
+
+
+    /**
+     * Returns a list of fullnodes for a given list of ids of nodes.
+     *
+     * @param ids
+     * @return list of full nodes
+     */
+    public ArrayList<Node> getFullNodesForIds(ArrayList<Long> ids) {
+        ArrayList<Node> fullNodes = new ArrayList<Node>();
+        for (long id : ids) {
+            fullNodes.add(allNodes.get(id));
+        }
+        return fullNodes;
+    }
+
+
+
+
+    /**
+     * Returns for every relation of the given type its unconnected ways.
+     * Be careful! TrimmedWay can be null for a relation that has no ways in the bounding box! It can
+     * happen that a relation has only one stop in the bounding box and therefore no way.
+     *
+     * @param routeType
+     * @return list of unconnected ways for every relation. (Can be null for some relations!)
+     */
+    public ArrayList<TrimmedWay> getTrimmedWays(RouteType routeType) {
+        ArrayList<TrimmedWay> trimmedWays = this.wayRetriever.getTrimmedWays(getRelationsByType(routeType));
+        initializeTrimmedWaysPixels(trimmedWays);
+        return trimmedWays;
+    }
+
+
+    public ArrayList<TrimmedWay> getStrokes(RouteType routeType){
+        // All ways inside the bounding box of the map with their node ids
+        ArrayList<TrimmedWay> trimmedWays = this.wayRetriever.getTrimmedWays(getRelationsByType(routeType));
+        // Create strokes for every way and then combine all strokes
+        initializeTrimmedWaysPixels(trimmedWays);
+
+
+        return trimmedWays;
+    }
+
+
+
+    /**
+     * Apply douglas peucker algorithm on all given ways
      * @param routeType
      * @return
      */
-    public HashSet<Node> getAllStopAndPlatformNodes(RouteType routeType) {
-        return getAllStopAndPlatformNodes(getRelationsByType(routeType));
+    public ArrayList<ReducedWay> getDouglasPeuckerWays(RouteType routeType){
+        // First retrieve the trimmedways with only containing their waynode ids
+        ArrayList<TrimmedWay> trimmedWays = this.wayRetriever.getTrimmedWays(getRelationsByType(routeType));
+        // Initialize the trimmed ways with the pixel values for all its contained nodes
+        initializeTrimmedWaysPixels(trimmedWays);
+        // Apply simplifying and merging algorithms on the ways
+        ArrayList<ReducedWay> reducedWays = this.wayManipulator.douglasPeuckerAlgo(trimmedWays, 5);
+        System.out.println("Trimmedways size: " + trimmedWays.size());
+        System.out.println("ReducedWays size: " + reducedWays.size());
+        return reducedWays;
+    }
+
+
+    /**
+     * Initializes the pixel values when drawn to the static map image for all nodes in the trimmedways.
+     * @param trimmedWays
+     */
+    private void initializeTrimmedWaysPixels(ArrayList<TrimmedWay> trimmedWays){
+        ArrayList<Node> fullNodes;
+        ArrayList<PixelNode> pixelNodes;
+        for (TrimmedWay way: trimmedWays){
+            fullNodes = getFullNodesForIds(way.getWaynodes());
+            pixelNodes = calculatePixelNodes(fullNodes);
+            // Intialize the pixel node list of the trimmedway
+            way.initializePixelNodes(pixelNodes);
+        }
     }
 
     /**
-     * TODO: curently unused!
-     * Returns all stop nodes and platform nodes unmerged for the given relations.
-     *
-     * @param routeRelations
-     * @return stop and platform nodes unmerged
+     * Converts a list of fullnodes to a list of pixel nodes which contain only the information about the pixel value of the node when drawn to the map.
+     * @param fullNodes
+     * @return
      */
-    private HashSet<Node> getAllStopAndPlatformNodes(HashSet<Relation> routeRelations) {
-        HashSet<Long> containedStopAndPlatformIds = extractAllContainedStopAndPlatformIDs(routeRelations);
-        HashSet<Node> stopAndPlatformNodes = new HashSet<Node>();
-        Node fullNode;
-        for (long stopOrPlatformId : containedStopAndPlatformIds) {
-            fullNode = this.dataContainer.getFullNodeByid(stopOrPlatformId);
-            stopAndPlatformNodes.add(fullNode);
+    private ArrayList<PixelNode> calculatePixelNodes (ArrayList<Node> fullNodes){
+        ArrayList<PixelNode> pixelNodes = new ArrayList<PixelNode>();
+        PixelNode currentPixelNode;
+        for (Node node: fullNodes) {
+            currentPixelNode = convertGeoNodeToPixelNode(node);
+            pixelNodes.add(currentPixelNode);
         }
-        return stopAndPlatformNodes;
+        return pixelNodes;
     }
+
+    /**
+     * Converts a fullnode to a pixel node which contains only the information about the pixel position of the node when drawn to the static map image.
+     * @param node
+     * @return
+     */
+    private PixelNode convertGeoNodeToPixelNode( Node node){
+        int[] pixelValues =  DrawToGraphics.convertGeoToPixel(node.getLatitude(), node.getLongitude(), this.imageData.getPIXELWIDTH(), this.imageData.getPIXELHEIGHT(),
+                this.imageData.getBoundingBox());
+        return new PixelNode(pixelValues[0], pixelValues[1]);
+    }
+
 
     /**
      * Returns all relations for a selected type of public transport relations.

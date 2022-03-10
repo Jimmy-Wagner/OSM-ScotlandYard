@@ -69,7 +69,7 @@ public class ConsoleDialog {
      */
     public static DetailsOfRoute selectStopsOrRoutes() {
         System.out.println("Do you want to display 0:stops, routes:1 or both:2");
-        int details = 2;//scanner.nextInt();
+        int details = 1;//scanner.nextInt();
         if (details < 0 || details > 2) {
             System.out.println("Fehlerhafte Eingabe!");
         }

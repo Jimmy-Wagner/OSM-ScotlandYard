@@ -11,6 +11,7 @@ import org.openstreetmap.osmosis.core.domain.v0_6.Bound;
 public class ImageData {
     // Zoom level for the map image. This determines the size of the bounding box.
     // zoomlevel in leaflet = this zoom level + 1
+    // 13f best
     private final float ZOOMLEVEL = 13f;
     // Bounding box of the image map
     private Bound boundingBox;

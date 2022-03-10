@@ -24,7 +24,10 @@ public class Main {
 
         // 2. Retrieve the latitude and longitude of this address
         GeoApiCaller geoApiCaller = new GeoApiCaller();
-        Point pointOfAddress = geoApiCaller.callApiSycnhrounisly(address);
+        // ZUm zeigen warum buffer inkrementell kleiner machen einmal (-0.124,51.5006) und (-0.124, 51.6005) subway netzwerk mergen
+        Point pointOfAddress = Point.fromLngLat(-0.124, 51.5006);
+                // Point.fromLngLat(-0.1115, 51.496);
+                // geoApiCaller.callApiSycnhrounisly(address);
 
         // 3. Prepare information to retrieve the map image
         ImageData imageData = new ImageData(pointOfAddress);
@@ -42,25 +45,29 @@ public class Main {
         // Bietigheim/test.osm.pbf
 
         // 6. Create Data Handler for extracting information from the relations
-        OsmDataHandler dataHandler = new OsmDataHandler(dataContainer);
+        OsmDataHandler dataHandler = new OsmDataHandler(dataContainer, imageData);
 
         // 7. Create the new image frame and draw object of that frame
         ImageFrame frame = new ImageFrame(mapImage, imageData.getPIXELWIDTH()+100,
-                imageData.getPIXELHEIGHT()+100);
+                imageData.getPIXELHEIGHT()+100, dataHandler);
         DrawToGraphics drawToGraphics = new DrawToGraphics(frame.getG(), imageData);
+        int [] hi = DrawToGraphics.convertGeoToPixel(51.5171, -0.124,1200, 1200, imageData.getBoundingBox());
 
         // 7. Select what to draw
         ArrayList<RouteType> routeTypes = ConsoleDialog.selectRouteTypes();
         DetailsOfRoute detailsOfRoute = ConsoleDialog.selectStopsOrRoutes();
 
-        System.out.println("Wait for drawing please!");
-
         // 8. draw selected stops and routes
         DrawHandler drawHandler = new DrawHandler(drawToGraphics, dataHandler);
         drawHandler.draw(detailsOfRoute, routeTypes);
 
+
+
+        System.out.println("Wait for drawing please!");
         // last. make frame visible
         frame.setVisible();
+        frame.saveImage();
+
         System.out.println("Ready to view!");
     }
 }

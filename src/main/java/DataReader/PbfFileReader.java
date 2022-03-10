@@ -16,8 +16,10 @@ import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 import crosby.binary.osmosis.OsmosisReader;
 
 /**
- * Receives data from the Osmosis pipeline and prints ways which have the
- * 'highway key.
+ * This class reads a given osm pbf file.
+ * It saves all nodes that are contaianed in the preselected bdouning box of an map image.
+ * Based on the contained nodes it saves all ways that have at least one node in the bounding box.
+ * All public transport and platfom relations are saved independently of their occurence in the bounding box.
  *
  * @author pa5cal
  */
@@ -89,7 +91,7 @@ public class PbfFileReader implements Sink {
     }
 
     /**
-     * This methods adds the given relation to the right set of relations.
+     * Adds the given relation to the right set of relations.
      * When the data is premanipulated with osmosis as it should then there are only following types of relations:
      * 1. public transport route relations (route=bus,train,subway,trolleybus,light_rail,monorail,tram)
      * 2. platform route relations (platform=*)
@@ -130,7 +132,7 @@ public class PbfFileReader implements Sink {
 
 
     /**
-     * Adds the given way to all ways.
+     * Adds the given way to all ways if its contained in the bounding box of the image.
      *
      * @param way
      */
