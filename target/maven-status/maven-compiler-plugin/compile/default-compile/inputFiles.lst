@@ -1,5 +1,4 @@
 /Users/jimmy/Desktop/OSM-ScotlandYard/src/main/java/RelationMemberHelper.java
-/Users/jimmy/Desktop/OSM-ScotlandYard/src/main/java/AngleHelper.java
 /Users/jimmy/Desktop/OSM-ScotlandYard/src/main/java/ThinOut.java
 /Users/jimmy/Desktop/OSM-ScotlandYard/src/main/java/RealPixelNode.java
 /Users/jimmy/Desktop/OSM-ScotlandYard/src/main/java/PointBO.java
@@ -51,7 +50,6 @@
 /Users/jimmy/Desktop/OSM-ScotlandYard/src/main/java/RouteType.java
 /Users/jimmy/Desktop/OSM-ScotlandYard/src/main/java/IntersectionListenerNew.java
 /Users/jimmy/Desktop/OSM-ScotlandYard/src/main/java/ReducedWay.java
-/Users/jimmy/Desktop/OSM-ScotlandYard/src/main/java/ConfiguredLineString.java
 /Users/jimmy/Desktop/OSM-ScotlandYard/src/main/java/SegmentBoNew.java
 /Users/jimmy/Desktop/OSM-ScotlandYard/src/main/java/IntersectionFinderNew.java
 /Users/jimmy/Desktop/OSM-ScotlandYard/src/main/java/TrimmedWay.java

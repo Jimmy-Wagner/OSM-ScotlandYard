@@ -81,6 +81,10 @@ public class ConsoleDialog {
         }
     }
 
+    public static String selectPathToOsmFile(){
+        System.out.println("Please enter the path to the .osm.pbf file containing the OSM data.");
+        return scanner.nextLine();
+    }
 
     /**
      * Asks for address the user want to load the image of

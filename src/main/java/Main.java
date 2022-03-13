@@ -27,14 +27,17 @@ public class Main {
         ImageApiCaller imageApiCaller = new ImageApiCaller(imageData);
         BufferedImage mapImage = imageApiCaller.callApi();
 
-        System.out.println("Data reading...");
         // 5. Read the necessary osm data
         PbfFileReader reader = new PbfFileReader(imageData.getBoundingBox());
+        String pathToFile = ConsoleDialog.selectPathToOsmFile();
         OsmDataContainer dataContainer =
-                reader.readFile("/Users/jimmy/Desktop/OSM-ScotlandYard/geofiles/greater-london.osm.pbf");
+                reader.readFile(pathToFile);
+        // /Users/jimmy/Desktop/OSM-ScotlandYard/geofiles/greater-london.osm.pbf
         // london/0.publictransportRoutesAllInclusive.osm.pbf
         // Stuttgart/stuttgart-publicTransport.osm.pbf
         // Bietigheim/test.osm.pbf
+
+        System.out.println("Data reading...");
 
         // 6. Create Data Handler for extracting information from the relations
         OsmDataHandler dataHandler = new OsmDataHandler(dataContainer, imageData);
@@ -43,7 +46,6 @@ public class Main {
         ImageFrame frame = new ImageFrame(mapImage, imageData.getPIXELWIDTH()+100,
                 imageData.getPIXELHEIGHT()+100, dataHandler);
         DrawToGraphics drawToGraphics = new DrawToGraphics(frame.getG(), imageData);
-        int [] hi = DrawToGraphics.convertGeoToPixel(51.5171, -0.124,1200, 1200, imageData.getBoundingBox());
 
         // 7. Select what to draw
         ArrayList<RouteType> routeTypes = ConsoleDialog.selectRouteTypes();
@@ -55,11 +57,11 @@ public class Main {
         drawHandler.draw(detailsOfRoute, routeTypes);
 
         // last. make frame visible
-        frame.setVisible();
-        frame.saveImage();
+        //frame.setVisible();
+        //frame.saveImage();
         new FileOutput().createFiles();
         System.out.println("Finish!");
 
-        //System.exit(0);
+        System.exit(0);
     }
 }

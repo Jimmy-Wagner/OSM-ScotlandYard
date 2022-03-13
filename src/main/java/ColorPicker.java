@@ -1,7 +1,6 @@
 import java.awt.*;
 
 public class ColorPicker {
-    // FIXME
     public static Color colorForHalts(RouteType type){
         switch (type){
             case BUS:
