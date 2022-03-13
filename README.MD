@@ -4,7 +4,7 @@
 1. Java
 2. Maven
 3. Git
-4. OSM-Datei (in .osm.pbf Format), die den gewünschten Kartenvisualisierungsbereich abdeckt. Diese Dateien lassen sich zum Beispiel durch [Geofabrik](https://download.geofabrik.de/) beziehen. Die Beispieldatei [greater-london.osm.pbf](geofiles/greater-london.osm.pbf) im Ordner [geofiles](geofiles), deckt den Bereich Greater London ab.
+4. OSM-Datei (in .osm.pbf Format), die den gewünschten Kartenvisualisierungsbereich abdeckt. Diese Dateien lassen sich zum Beispiel durch [Geofabrik](https://download.geofabrik.de/) beziehen. Eine Beispieldatei [greater-london.osm.pbf](geofiles/greater-london.osm.pbf) im Ordner [geofiles](geofiles), deckt den Bereich Greater London ab. 
 
 #### Greater London
 ![Greater London](https://user-images.githubusercontent.com/45538729/158072585-34aece11-f732-4088-9b77-bae192392934.png)
