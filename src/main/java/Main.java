@@ -31,7 +31,7 @@ public class Main {
         // 5. Read the necessary osm data
         PbfFileReader reader = new PbfFileReader(imageData.getBoundingBox());
         OsmDataContainer dataContainer =
-                reader.readFile("/Users/jimmy/Desktop/london/0.publictransportRoutesAllInclusive.osm.pbf");
+                reader.readFile("/Users/jimmy/Desktop/OSM-ScotlandYard/geofiles/greater-london.osm.pbf");
         // london/0.publictransportRoutesAllInclusive.osm.pbf
         // Stuttgart/stuttgart-publicTransport.osm.pbf
         // Bietigheim/test.osm.pbf
@@ -55,11 +55,11 @@ public class Main {
         drawHandler.draw(detailsOfRoute, routeTypes);
 
         // last. make frame visible
-        //frame.setVisible();
+        frame.setVisible();
         frame.saveImage();
         new FileOutput().createFiles();
         System.out.println("Finish!");
 
-        System.exit(0);
+        //System.exit(0);
     }
 }

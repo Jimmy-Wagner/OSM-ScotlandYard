@@ -9,6 +9,7 @@ import java.util.HashMap;
 public class CurveVertexes {
 
     public static ArrayList<Coordinate> stopPointsCoordinates = new ArrayList<>();
+    // These are the stop points that will be drawn to the map
     public static ArrayList<Integer> stopPointVertexes = new ArrayList<>();
     public static HashMap<Coordinate, Integer> stopPointsWithType = new HashMap<>();
     // This is the graph to go.

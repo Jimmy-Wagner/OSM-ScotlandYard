@@ -30,9 +30,9 @@ public class GraphManipulator {
 
     public void adjustGraph() {
         // Currently not implemented
-        snapCloseEndpoints();
+        //snapCloseEndpoints();
 
-        removeDeadEnds();
+        removeDeadEnds(graph);
 
         //mergeCloseConnectionPoints();
 
@@ -56,6 +56,8 @@ public class GraphManipulator {
 
         mergeCloseStopPoints();
         //addStopPointRoutetype();
+
+        removeDeadEnds(graph);
 
 
         createStopPointConnections();
@@ -503,8 +505,9 @@ public class GraphManipulator {
     /**
      * Removes recursivly all dead ends. New dead ends can emerge when deleting some, which will be also deleted.
      */
-    private void removeDeadEnds() {
-        HashSet<Integer> endVertexes = identifyEndPoints();
+    private void removeDeadEnds(SimpleWeightedGraph<Integer, DefaultWeightedEdge> graph) {
+        removeedVertexes.clear();
+        HashSet<Integer> endVertexes = identifyEndPoints(graph);
         for (int endVertex : endVertexes) {
             if (!removeedVertexes.contains(endVertex)) {
                 removeDeadEnds(endVertex);
@@ -516,20 +519,20 @@ public class GraphManipulator {
         List<Integer> connectedVertexes = Graphs.neighborListOf(graph, endvertex);
         if (connectedVertexes.size() == 1) {
             graph.removeVertex(endvertex);
-            //mergedStopPoints.remove(endvertex);
+            mergedStopPoints.remove(endvertex);
             removeedVertexes.add(endvertex);
             removeDeadEnds(connectedVertexes.get(0));
         }
         if (connectedVertexes.size() == 0) {
             graph.removeVertex(endvertex);
-            //mergedStopPoints.remove(endvertex);
+            mergedStopPoints.remove(endvertex);
             removeedVertexes.add(endvertex);
         }
     }
 
 
     private void snapCloseEndpoints() {
-        HashSet<Integer> endVertexes = identifyEndPoints();
+        HashSet<Integer> endVertexes = identifyEndPoints(graph);
         ArrayList<SegmentStroke> segments = buildSegments();
 
     }
@@ -547,7 +550,7 @@ public class GraphManipulator {
         return null;
     }
 
-    private HashSet<Integer> identifyEndPoints() {
+    private HashSet<Integer> identifyEndPoints(SimpleWeightedGraph<Integer, DefaultWeightedEdge> graph) {
         // Identify endpoints, points which are connected to only one other vertex
         Set<Integer> vertexes = graph.vertexSet();
         HashSet<Integer> endVertexes = new HashSet<>();
