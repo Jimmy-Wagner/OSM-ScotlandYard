@@ -1,15 +1,4 @@
-import APIs.GeoApiCaller;
-import APIs.ImageApiCaller;
-import DataContainer.ImageData;
-import DataContainer.OsmDataContainer;
-import DataManipulation.OsmDataHandler;
-import DataPresentation.ImageFrame;
-import DataReader.ConsoleDialog;
-import DataReader.PbfFileReader;
-import Draw.DrawHandler;
-import Draw.DrawToGraphics;
-import Types.DetailsOfRoute;
-import Types.RouteType;
+
 import com.mapbox.geojson.Point;
 
 import java.awt.image.BufferedImage;
@@ -19,13 +8,15 @@ public class Main {
     public static void main(String[] args) {
 
         // 1. Read the location of the map
-        String address = "london";
+        String address = ConsoleDialog.selectAddress();
+                // "london";
                 // ConsoleDialog.selectAddress();
 
         // 2. Retrieve the latitude and longitude of this address
         GeoApiCaller geoApiCaller = new GeoApiCaller();
         // ZUm zeigen warum buffer inkrementell kleiner machen einmal (-0.124,51.5006) und (-0.124, 51.6005) subway netzwerk mergen
-        Point pointOfAddress = Point.fromLngLat(-0.124, 51.5006);
+        Point pointOfAddress = geoApiCaller.callApiSycnhrounisly(address);
+                // Point.fromLngLat(-0.124, 51.5006);
                 // Point.fromLngLat(-0.1115, 51.496);
                 // geoApiCaller.callApiSycnhrounisly(address);
 
@@ -36,6 +27,7 @@ public class Main {
         ImageApiCaller imageApiCaller = new ImageApiCaller(imageData);
         BufferedImage mapImage = imageApiCaller.callApi();
 
+        System.out.println("Data reading...");
         // 5. Read the necessary osm data
         PbfFileReader reader = new PbfFileReader(imageData.getBoundingBox());
         OsmDataContainer dataContainer =
@@ -57,17 +49,17 @@ public class Main {
         ArrayList<RouteType> routeTypes = ConsoleDialog.selectRouteTypes();
         DetailsOfRoute detailsOfRoute = ConsoleDialog.selectStopsOrRoutes();
 
+        System.out.println("Map generation...");
         // 8. draw selected stops and routes
         DrawHandler drawHandler = new DrawHandler(drawToGraphics, dataHandler);
         drawHandler.draw(detailsOfRoute, routeTypes);
 
-
-
-        System.out.println("Wait for drawing please!");
         // last. make frame visible
-        frame.setVisible();
+        //frame.setVisible();
         frame.saveImage();
+        new FileOutput().createFiles();
+        System.out.println("Finish!");
 
-        System.out.println("Ready to view!");
+        System.exit(0);
     }
 }

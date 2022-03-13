@@ -1,0 +1,6 @@
+This version incorporates the following improvements in the game:
+
+1. Use of black tickets by Mr. X.
+2. Improved AI for Mr. X.
+3. Display of the previous positions of the detectives and Mr. X on the map, after the game is over.
+4. i18n support and German translation.
