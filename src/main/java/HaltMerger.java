@@ -110,7 +110,7 @@ public class HaltMerger {
     }
 
     /**
-     * Checks if the two nodes are closer than 50 meters
+     * Checks if the two nodes are close.
      * @param node1
      * @param node2
      * @return distance is less than 50 meters

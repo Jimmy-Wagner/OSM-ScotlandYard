@@ -20,32 +20,31 @@ public class GraphManipulator {
     private SimpleWeightedGraph<Integer, DefaultWeightedEdge> connectionVertexGraph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
     private HashSet<Integer> removeedVertexes = new HashSet<>();
     private HashSet<Integer> mergedStopPoints = new HashSet<>();
-    private HashMap<Coordinate, Integer> stopPointWithRoutetype = new HashMap<>();
+    private HashSet<Integer> deletedVertexes = new HashSet<>();
     private HashSet<Integer> doneVertexes = new HashSet<>();
     private SimpleDirectedWeightedGraph<Integer, DefaultWeightedEdge> directedGraph = new SimpleDirectedWeightedGraph<>(DefaultWeightedEdge.class);
+    private HashSet<Integer> removedAdvanced = new HashSet<>();
 
     public GraphManipulator(SimpleWeightedGraph graph) {
         this.graph = graph;
     }
 
     public void adjustGraph() {
-        // Currently not implemented
-        //snapCloseEndpoints();
 
         removeDeadEnds(graph);
+
 
         //mergeCloseConnectionPoints();
 
         Set<Graph<Integer, DefaultWeightedEdge>> connectedComponents = new BiconnectivityInspector<Integer, DefaultWeightedEdge>(graph).getConnectedComponents();
 
-        Graph<Integer, DefaultWeightedEdge> biggestConnectedGraph = null;
+        Graph<Integer, DefaultWeightedEdge> biggestConnectedGraph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 
-        for (Graph currentGraph: connectedComponents){
-            if (biggestConnectedGraph == null){
+        for (Graph currentGraph : connectedComponents) {
+            if (biggestConnectedGraph.vertexSet().isEmpty()) {
                 biggestConnectedGraph = currentGraph;
-            }
-            else {
-                if (biggestConnectedGraph.vertexSet().size() < currentGraph.vertexSet().size()){
+            } else {
+                if (biggestConnectedGraph.vertexSet().size() < currentGraph.vertexSet().size()) {
                     biggestConnectedGraph = currentGraph;
                 }
             }
@@ -54,19 +53,88 @@ public class GraphManipulator {
         graph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
         Graphs.addGraph(graph, biggestConnectedGraph);
 
+        for (Graph currentGraph : connectedComponents) {
+            if (currentGraph != biggestConnectedGraph) {
+                mergedStopPoints.removeAll(currentGraph.vertexSet());
+            }
+        }
+
+
         mergeCloseStopPoints();
         //addStopPointRoutetype();
 
+
         removeDeadEnds(graph);
 
+        removeedVertexes.clear();
+        mergeStopPoints(new ArrayList<>(mergedStopPoints));
 
         createStopPointConnections();
         CurveVertexes.connectionVertexGraph = connectionVertexGraph;
+
+        removeDeadEndsAdvanced(connectionVertexGraph);
 
         CurveVertexes.stopPointVertexes = new ArrayList<>(connectionVertexGraph.vertexSet());
 
         createDirectedGraph();
         CurveVertexes.directedGraph = directedGraph;
+    }
+
+    public void removeDeadEndsAdvanced(SimpleWeightedGraph<Integer, DefaultWeightedEdge> connectionVertexGraph) {
+        ArrayList<Integer> deadEndVertexes = getDeadEnds(connectionVertexGraph);
+
+        for (int deadEndVertex : deadEndVertexes) {
+            graph.removeVertex(deadEndVertex);
+            connectionVertexGraph.removeVertex(deadEndVertex);
+            mergedStopPoints.remove(deadEndVertex);
+        }
+
+        removeDeadEnds(graph);
+
+    }
+
+    public void removeDeadEndsAdvanced(Integer endvertex, boolean first) {
+        if (first) {
+            List<Integer> connectedVertexes = Graphs.neighborListOf(graph, endvertex);
+            graph.removeVertex(endvertex);
+            connectionVertexGraph.removeVertex(endvertex);
+            mergedStopPoints.remove(endvertex);
+            removedAdvanced.add(endvertex);
+            for (Integer vertex : connectedVertexes) {
+                removeDeadEndsAdvanced(vertex, false);
+            }
+            return;
+        }
+
+        List<Integer> connectedVertexes = Graphs.neighborListOf(graph, endvertex);
+        Set<Integer> connectionGraphSet = connectionVertexGraph.vertexSet();
+        if (connectedVertexes.size() == 1) {
+            graph.removeVertex(endvertex);
+            if (connectionGraphSet.contains(endvertex)) {
+                connectionVertexGraph.removeVertex(endvertex);
+            }
+            mergedStopPoints.remove(endvertex);
+            removedAdvanced.add(endvertex);
+            removeDeadEndsAdvanced(connectedVertexes.get(0), false);
+        }
+        if (connectedVertexes.size() == 0) {
+            graph.removeVertex(endvertex);
+            if (connectionGraphSet.contains(endvertex)) {
+                connectionVertexGraph.removeVertex(endvertex);
+            }
+            mergedStopPoints.remove(endvertex);
+            removedAdvanced.add(endvertex);
+        }
+    }
+
+    public ArrayList<Integer> getDeadEnds(SimpleWeightedGraph<Integer, DefaultWeightedEdge> graph) {
+        ArrayList<Integer> deadendVertexes = new ArrayList<>();
+        for (int vertex : graph.vertexSet()) {
+            if (graph.degreeOf(vertex) <= 1) {
+                deadendVertexes.add(vertex);
+            }
+        }
+        return deadendVertexes;
     }
 
     private void createDirectedGraph() {
@@ -129,7 +197,13 @@ public class GraphManipulator {
             int weight = (int) graph.getEdgeWeight(edge);
 
             int nextStopVertex = findNextStopVertex(neighbor, stopVertex);
-            connectedConnectionPoints.put(nextStopVertex, weight);
+            if (connectedConnectionPoints.get(nextStopVertex) != null) {
+                int oldWeight = connectedConnectionPoints.get(nextStopVertex);
+                int newWeight = WeightHelper.combineWeights(oldWeight, weight);
+                connectedConnectionPoints.put(nextStopVertex, newWeight);
+            } else {
+                connectedConnectionPoints.put(nextStopVertex, weight);
+            }
         }
         return connectedConnectionPoints;
 
@@ -165,16 +239,6 @@ public class GraphManipulator {
     }
 
 
-    private void addStopPointRoutetype() {
-        for (int vertex : mergedStopPoints) {
-            Set<DefaultWeightedEdge> edges = graph.edgesOf(vertex);
-            for (DefaultWeightedEdge edge : edges) {
-
-            }
-        }
-    }
-
-
     /**
      * Identifys all vertexes that are eligible for a stop position.
      * 1. All connection nodes
@@ -200,33 +264,7 @@ public class GraphManipulator {
         ArrayList<Integer> stopPoints = identifyStopPoints();
         mergeStopPoints(stopPoints);
 
-    }
 
-    private void mergeStopPoints(ArrayList<Integer> points) {
-        ArrayList<Coordinate> coordsVertexes = getCoords(points);
-        HashSet<Coordinate> alreadyMerged = new HashSet<>();
-        for (int i = 0; i < coordsVertexes.size(); i++) {
-            Coordinate c1 = coordsVertexes.get(i);
-            int vertex1 = points.get(i);
-            if (alreadyMerged.contains(c1)) {
-                continue;
-            }
-            alreadyMerged.add(c1);
-            ArrayList<Coordinate> currentMergeGroupCoords = new ArrayList<>();
-            ArrayList<Integer> currentMergeGroupVertexes = new ArrayList<>();
-            currentMergeGroupCoords.add(c1);
-            currentMergeGroupVertexes.add(vertex1);
-            for (int j = i + 1; j < points.size(); j++) {
-                Coordinate c2 = coordsVertexes.get(j);
-                int vertex2 = points.get(j);
-                if (c1.distance(c2) < 30) {
-                    currentMergeGroupCoords.add(c2);
-                    currentMergeGroupVertexes.add(vertex2);
-                    alreadyMerged.add(c2);
-                }
-            }
-            mergeCurrentGroupNew(currentMergeGroupCoords, currentMergeGroupVertexes);
-        }
     }
 
     /**
@@ -260,11 +298,41 @@ public class GraphManipulator {
         }
     }
 
+    private void mergeStopPoints(ArrayList<Integer> points) {
+        ArrayList<Coordinate> coordsVertexes = getCoords(points);
+        HashSet<Coordinate> alreadyMerged = new HashSet<>();
+        for (int i = 0; i < coordsVertexes.size(); i++) {
+            Coordinate c1 = coordsVertexes.get(i);
+            int vertex1 = points.get(i);
+            if (alreadyMerged.contains(c1)) {
+                continue;
+            }
+            alreadyMerged.add(c1);
+            ArrayList<Coordinate> currentMergeGroupCoords = new ArrayList<>();
+            ArrayList<Integer> currentMergeGroupVertexes = new ArrayList<>();
+            currentMergeGroupCoords.add(c1);
+            currentMergeGroupVertexes.add(vertex1);
+            for (int j = i + 1; j < points.size(); j++) {
+                Coordinate c2 = coordsVertexes.get(j);
+                int vertex2 = points.get(j);
+                if (c1.distance(c2) < 30) {
+                    currentMergeGroupCoords.add(c2);
+                    currentMergeGroupVertexes.add(vertex2);
+                    alreadyMerged.add(c2);
+                }
+            }
+            mergeCurrentGroupNew(currentMergeGroupCoords, currentMergeGroupVertexes);
+        }
+    }
+
+
     private void mergeCurrentGroupNew(ArrayList<Coordinate> mergeGroupCoords, ArrayList<Integer> mergeGroupVertexes) {
 
         // There is nothing to merge, that means there is no other connection point close to the given point
         if (mergeGroupCoords.size() == 1) {
-            mergedStopPoints.add(mergeGroupVertexes.get(0));
+            if (!deletedVertexes.contains(mergeGroupVertexes.get(0))) {
+                mergedStopPoints.add(mergeGroupVertexes.get(0));
+            }
             return;
         }
 
@@ -279,15 +347,19 @@ public class GraphManipulator {
             boundaryMergeGroup = boundaryMergeGroup.buffer(5, 8, BufferOp.CAP_ROUND);
         }
 
-        HashSet<Integer> deletionGroup = getDeleteionSet(boundaryMergeGroup, mergeGroupVertexes);
+        HashSet<Integer> deletionGroup = getDeletionSet(boundaryMergeGroup, mergeGroupVertexes);
+
         ArrayList<Integer> deletionGroupList = new ArrayList<>(deletionGroup);
         MultiPoint deletionGroupPoints = createMulitPoint(deletionGroup);
         Coordinate centroid = Centroid.getCentroid(deletionGroupPoints);
+
         int centroidID = encodeNumbers((int) centroid.getX(), (int) centroid.getY());
 
         HashMap<Integer, Integer> neighboursOfDeletionGroup = getConnectedNodes(deletionGroupList);
 
+        deletedVertexes.addAll(deletionGroup);
         graph.removeAllVertices(deletionGroup);
+        mergedStopPoints.removeAll(deletionGroup);
         addCentroidWIthNeighbours(centroidID, neighboursOfDeletionGroup);
         mergedStopPoints.add(centroidID);
 
@@ -357,7 +429,7 @@ public class GraphManipulator {
         return allNeighbours;
     }
 
-    private HashSet<Integer> getDeleteionSet(Geometry geom, ArrayList<Integer> mergeVertexes) {
+    private HashSet<Integer> getDeletionSet(Geometry geom, ArrayList<Integer> mergeVertexes) {
         HashSet<Integer> deletionGroup = new HashSet<>();
         HashSet<Integer> allVertex = new HashSet<Integer>(graph.vertexSet());
         for (int vertex : allVertex) {
@@ -519,22 +591,21 @@ public class GraphManipulator {
         List<Integer> connectedVertexes = Graphs.neighborListOf(graph, endvertex);
         if (connectedVertexes.size() == 1) {
             graph.removeVertex(endvertex);
+            if (connectionVertexGraph.vertexSet().contains(endvertex)) {
+                connectionVertexGraph.removeVertex(endvertex);
+            }
             mergedStopPoints.remove(endvertex);
             removeedVertexes.add(endvertex);
             removeDeadEnds(connectedVertexes.get(0));
         }
         if (connectedVertexes.size() == 0) {
             graph.removeVertex(endvertex);
+            if (connectionVertexGraph.vertexSet().contains(endvertex)) {
+                connectionVertexGraph.removeVertex(endvertex);
+            }
             mergedStopPoints.remove(endvertex);
             removeedVertexes.add(endvertex);
         }
-    }
-
-
-    private void snapCloseEndpoints() {
-        HashSet<Integer> endVertexes = identifyEndPoints(graph);
-        ArrayList<SegmentStroke> segments = buildSegments();
-
     }
 
     /**

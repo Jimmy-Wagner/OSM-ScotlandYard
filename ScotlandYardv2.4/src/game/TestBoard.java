@@ -25,7 +25,7 @@ import javax.swing.JOptionPane;
  */
 public class TestBoard implements Transport, Comparator<Object>, Comparable<Object> {
 	static private final int NO_OF_MOVES = 23;
-	static private final int NO_OF_DETECTIVES = 5;
+	static private int NO_OF_DETECTIVES = 5;
 	static private final int CHECK_POINTS = 5;
 	static private final int INF = 100;
 	static private final int WIN = 200;

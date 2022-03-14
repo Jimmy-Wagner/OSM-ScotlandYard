@@ -42,8 +42,8 @@ public class GeoApiCaller {
                 locationOfAddress = results.get(0).center();
                 this.cameraPoint = locationOfAddress;
                 System.out.println("Your address is valid!");
-                System.out.println("Latitude: " + locationOfAddress.latitude());
-                System.out.println("longitude: " + locationOfAddress.longitude());
+                //System.out.println("Latitude: " + locationOfAddress.latitude());
+                //System.out.println("longitude: " + locationOfAddress.longitude());
             }
             else {
                 System.out.println("Your address is not valid! Please restart the programm.");

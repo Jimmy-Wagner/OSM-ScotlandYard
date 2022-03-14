@@ -57,6 +57,17 @@ public class ConsoleDialog {
         return selectedTypes;
     }
 
+    public static int selectAutomateORManuelCenter(){
+        System.out.println("Do you want to select the center of the map manually or do you want to automate the center selection? ");
+        System.out.println("For manual center selection type: 0");
+        System.out.println("For automated center selection type: 1");
+        int details = Integer.parseInt(scanner.nextLine());
+        if (details < 0 || details > 1) {
+            System.out.println("Not allowed input. Please restart the application.");
+        }
+        return details;
+    }
+
     /**
      * Asks user whether stops, routes or both should be displayed
      *
@@ -93,7 +104,8 @@ public class ConsoleDialog {
      */
     public static String selectAddress() {
         System.out.println("Which address do you want to select as center? Type a valid address:");
-        return scanner.nextLine();
+        String address = scanner.nextLine();
+        return address;
     }
 
 

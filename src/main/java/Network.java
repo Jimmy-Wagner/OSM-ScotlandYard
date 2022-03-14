@@ -352,13 +352,13 @@ public class Network {
 
         for (ReducedWay wayToMerge: busWays){
             double length = wayToMerge.length();
-            if (length < 30){
+            if (length < 40){
                 break;
             }
             // FIXME: Change bus network size
-            if (lengthIns > 15000){
+            /*if (lengthIns > 30000){
                 break;
-            }
+            }*/
             wayToMerge.setId(number++);
 
             insertedSplits = new WayManipulator().mergeWayOnNetworkBus(wayToMerge, allMergedTypeDiff, 0.73, 30);

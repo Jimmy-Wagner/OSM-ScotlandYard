@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.locationtech.jts.util.Stopwatch;
 import org.openstreetmap.osmosis.core.container.v0_6.*;
 import org.openstreetmap.osmosis.core.domain.v0_6.*;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
@@ -59,11 +60,15 @@ public class PbfFileReader implements Sink {
     public void process(EntityContainer entityContainer) {
         // Add only contained nodes
         if (entityContainer instanceof NodeContainer) {
+            //FIXME
+            RuntimeListener.totalNumberOfNodes++;
             Node node = ((NodeContainer) entityContainer).getEntity();
             addContainedNode(node);
         }
         // Add only contained ways
         else if (entityContainer instanceof WayContainer) {
+            //FIXME
+            RuntimeListener.totalNumberOfWays++;
             Way way = ((WayContainer) entityContainer).getEntity();
             addContainedWay(way);
         }
@@ -109,11 +114,11 @@ public class PbfFileReader implements Sink {
                 }
                 // route=tram
                 else if (value.equalsIgnoreCase("tram")) {
-                    tramRouteRelations.add(relation);
+                    subwayRouteRelations.add(relation);
                 } else if (value.equalsIgnoreCase("subway")) {
                     subwayRouteRelations.add(relation);
                 } else if (value.equalsIgnoreCase("light_rail")) {
-                    lightrailRouteRelations.add(relation);
+                    trainRouteRelations.add(relation);
                 } else if (value.equalsIgnoreCase("monorail")) {
                     monorailRouteRelations.add(relation);
                 }
@@ -193,6 +198,8 @@ public class PbfFileReader implements Sink {
      */
     public OsmDataContainer readFile(String pathToFile) {
 
+        Stopwatch watch = new Stopwatch();
+
         InputStream inputStream = null;
         try {
             inputStream = new FileInputStream(pathToFile);
@@ -203,6 +210,12 @@ public class PbfFileReader implements Sink {
         OsmosisReader reader = new OsmosisReader(inputStream);
         reader.setSink(this);
         reader.run();
+
+        RuntimeListener.readTime = watch.stop();
+
+        RuntimeListener.totalNumberOfContainedNodes = allContainedNodes.keySet().size();
+        RuntimeListener.totalNumberOfContainedWays = allContainedWays.keySet().size();
+
 
         return new OsmDataContainer(imageBoundingbox,
                 osmDataBoundingBox,

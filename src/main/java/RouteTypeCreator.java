@@ -105,6 +105,26 @@ public class RouteTypeCreator {
                         System.out.println("Severe error because not implemented4");
                         return null;
                 }
+            case TB:
+                switch (type2){
+                    case ST:
+                        return RouteType.STB;
+                    case TRAIN:
+                        return RouteType.TB;
+                    case SUBWAY:
+                        return RouteType.STB;
+                    case BUS:
+                        return RouteType.TB;
+                    case SB:
+                        return RouteType.STB;
+                    case TB:
+                        return RouteType.TB;
+                    case STB:
+                        return RouteType.STB;
+                    default:
+                        System.out.println("Severe error because not implemented4");
+                        return null;
+                }
 
             case STB:
                 return RouteType.STB;

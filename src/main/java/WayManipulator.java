@@ -271,7 +271,8 @@ public class WayManipulator {
         ArrayList<ReducedWay> alreadyInsertedWays = new ArrayList<>();
         double currentNetworkSize = 0;
         for (ReducedWay way : ways) {
-            if (currentNetworkSize > maxNetworkSize || way.getLength() < minimalWayLength) {
+            // FIXME: currentNetworkSize > maxNetworkSize ||
+            if ( way.getLength() < minimalWayLength) {
                 break;
             }
             ArrayList<ReducedWay> splitsOfWayMerging = mergeWayOnNetworkBus(way, alreadyInsertedWays, frechetSim, bufferSize);
