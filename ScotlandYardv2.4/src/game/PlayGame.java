@@ -393,7 +393,7 @@ public class PlayGame extends JApplet implements ActionListener, Transport, Item
 		String str = "Mr. X moved by ";
 		switch (move.getType()) {
 		case TAXI:
-			str += "Taxi";
+			str += "Train";
 			break;
 		case BUS:
 			str += "Bus";
