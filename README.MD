@@ -22,7 +22,7 @@
 
 ## Programm Nutzung
 1. Nach Aufforderung den Pfad zur OSM-Datei Datei angeben.
-2. Nach Auforderung ist eine Entscheidung zu treffen ob das Center des Kartenausschnitts manuell oder automatisiert zu generieren ist. Es wird empfohlen das Center manuell zu wählen (in Punkt 4 beschrieben). Die automatische Centerselektion wählt das Center der unterliegenden OSM-Daten, die in Punkt 1 bereit gestellt wurden. Dieses Center garantiert jedoch keine hohe öffentliche Verkehrsmitteldichte. Manuell lassen sich beliebige Center mit hohen öffentlichen Verkehrsmitteldichten wählen.
+2. Nach Auforderung ist eine Entscheidung zu treffen ob das Center des Kartenausschnitts manuell oder automatisiert zu generieren ist. Es wird empfohlen das Center manuell zu wählen (in Punkt 3 beschrieben). Die automatische Centerselektion wählt das Center der unterliegenden OSM-Daten, die in Punkt 1 bereit gestellt wurden. Dieses Center garantiert jedoch keine hohe öffentliche Verkehrsmitteldichte. Manuell lassen sich beliebige Center mit hohen öffentlichen Verkehrsmitteldichten wählen.
 3. Nach Aufforderung eine beliebige Adresse eingeben, die innerhalb des Abdeckungsbereichs der zuvor bereit gestellten OSM-Datei liegt. Beispiele hierfür sind `London bigben`, `2 Lincoln Memorial Circle NW`, `Stuttgart pfaffenwaldring 30`. Für detailliertere Informationen siehe [MapBox Geocoding](https://docs.mapbox.com/help/getting-started/geocoding/).
 4. Bei einer erfolgreichen Adresseingabe, wird auf Basis der Routen öffentlicher Verkehrsmittel die Grundlage des Spielbretts erstellt.
 5. Nach öffnen der GUI, durch einen Klick auf den Button `Spiel beginnen`, das Spiel starten.
