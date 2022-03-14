@@ -11,8 +11,8 @@
 ## Programm kompilieren
 1. Terminal öffnen
 2. In den Ordner des Projekts navigieren
-3. Shell script [compileApplication.sh](compileApplication.sh) durch Eingabe von `chmod +x compileApplication.sh` als ausführbar kennzeichnen
-4. [compileApplication.sh](compileApplication.sh), das die Kompilation automatisiert durch Eingabe von `sh compileAppliction.sh` starten
+3. Shell script [compileApplication.sh](./compileApplication.sh) durch Eingabe von `chmod +x compileApplication.sh` als ausführbar kennzeichnen
+4. [compileApplication.sh](./compileApplication.sh), das die Kompilation automatisiert durch Eingabe von `sh compileAppliction.sh` starten
 
 ## Programm starten
 1. Terminal öffnen
