@@ -1,4 +1,5 @@
 #!/bin/bash
+chmod +rwx target
 java -cp target/osmscotlandyard-1.0-SNAPSHOT.jar Main
 cd ScotlandYardv2.4
 cd bin

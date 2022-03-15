@@ -15,7 +15,7 @@ public class WeightHelper {
                     case 101:
                         return 101;
                     case 110:
-                        return 110;
+                        return 111;
                     case 111:
                         return 111;
                     default:

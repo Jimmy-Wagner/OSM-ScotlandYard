@@ -43,6 +43,7 @@ public class Main {
         OsmDataContainer dataContainer =
                 reader.readFile(pathToFile);
         // /Users/jimmy/Desktop/OSM-ScotlandYard/geofiles/greater-london.osm.pbf
+        // /Users/jimmy/Desktop/geofiles/stuttgart-publicTransport.osm.pbf
         // london/0.publictransportRoutesAllInclusive.osm.pbf
         // Stuttgart/stuttgart-publicTransport.osm.pbf
         // Bietigheim/test.osm.pbf
@@ -66,8 +67,7 @@ public class Main {
         DrawHandler drawHandler = new DrawHandler(drawToGraphics, dataHandler);
         drawHandler.draw(detailsOfRoute, routeTypes);
 
-        // last. make frame visible
-        //frame.setVisible();
+        // frame.setVisible();
         // Saves image to map file!
         frame.saveImage();
         new FileOutput().createFiles();

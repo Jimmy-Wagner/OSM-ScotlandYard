@@ -74,7 +74,9 @@ public class GraphManipulator {
 
         removeDeadEndsAdvanced(connectionVertexGraph);
 
+        mergedStopPoints = new HashSet<>(connectionVertexGraph.vertexSet());
         CurveVertexes.stopPointVertexes = new ArrayList<>(connectionVertexGraph.vertexSet());
+
 
         createDirectedGraph();
         CurveVertexes.directedGraph = directedGraph;
@@ -136,6 +138,8 @@ public class GraphManipulator {
         }
         return deadendVertexes;
     }
+
+
 
     private void createDirectedGraph() {
         for (int stopVertex : mergedStopPoints) {
