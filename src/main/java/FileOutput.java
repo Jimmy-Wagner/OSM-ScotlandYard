@@ -23,21 +23,22 @@ public class FileOutput {
     }
 
     private void createScotPosMap(){
-        String fileContent = Integer.toString(nodeToIdMapping.keySet().size()) + "\n";
+        String fileContent = Integer.toString(nodeToIdMapping.keySet().size()) + System.getProperty("line.separator");
         for (int vertex: graph.vertexSet()){
             int vertexId = nodeToIdMapping.get(vertex);
             int xy[] = decodeNumber(vertex);
             int x = xy[0];
             int y = xy[1];
-            fileContent += vertexId + " " + x + " " + y +"\n";
+            fileContent += vertexId + " " + x + " " + y + System.getProperty("line.separator");
         }
 
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("./ScotlandYardv2.4/bin/SCOTPOS.txt"), "utf-8"))) {
-            writer.write(fileContent);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        File scotPosFile = new File("./ScotlandYardv2.4/bin/SCOTPOS.txt");
+        try {
+            FileWriter fileWriter = new FileWriter(scotPosFile);
+            fileWriter.write(fileContent);
+
+            fileWriter.flush();
+            fileWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -78,21 +79,22 @@ public class FileOutput {
             for (int type: types){
                 String typeString = MyTypeConverter.convert(type);
                 linkNumber++;
-                fileContent += source + " " + target + " " + typeString + " \n";
+                fileContent += source + " " + target + " " + typeString + System.getProperty("line.separator");
             }
         }
 
         String file = "";
-        file += nodeNumber + " " + linkNumber + "\n";
+        file += nodeNumber + " " + linkNumber + System.getProperty("line.separator");
         file += fileContent;
 
 
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("./ScotlandYardv2.4/bin/SCOTMAP.txt"), "utf-8"))) {
-            writer.write(file);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        File scotmapFile = new File("./ScotlandYardv2.4/bin/SCOTMAP.txt");
+        try {
+            FileWriter fileWriter = new FileWriter(scotmapFile);
+            fileWriter.write(file);
+
+            fileWriter.flush();
+            fileWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
