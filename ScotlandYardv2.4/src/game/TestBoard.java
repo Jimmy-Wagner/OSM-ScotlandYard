@@ -57,6 +57,12 @@ public class TestBoard implements Transport, Comparator<Object>, Comparable<Obje
 		detectives = new Detective[NO_OF_DETECTIVES];
 		int partition = nodes.length / NO_OF_DETECTIVES - 1;
 		int part = 1;
+
+		if (nodes.length < 6){
+			System.out.println("The selected gameplan is too small, please restart the program and select another mapcenter");
+			System.exit(0);
+		}
+
 		for (int i = 0; i < NO_OF_DETECTIVES; i++) {
 			int rnd = (int) (partition * Math.random());
 			int pos = rnd + part;
