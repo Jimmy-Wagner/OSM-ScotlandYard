@@ -32,7 +32,7 @@ public class FileOutput {
             fileContent += vertexId + " " + x + " " + y + System.getProperty("line.separator");
         }
 
-        File scotPosFile = new File("./ScotlandYardv2.4/bin/SCOTPOS.txt");
+        File scotPosFile = new File("./ScotlandYardv2.4/bin/SCOTPOS.TXT");
         try {
             FileWriter fileWriter = new FileWriter(scotPosFile);
             fileWriter.write(fileContent);
@@ -88,7 +88,7 @@ public class FileOutput {
         file += fileContent;
 
 
-        File scotmapFile = new File("./ScotlandYardv2.4/bin/SCOTMAP.txt");
+        File scotmapFile = new File("./ScotlandYardv2.4/bin/SCOTMAP.TXT");
         try {
             FileWriter fileWriter = new FileWriter(scotmapFile);
             fileWriter.write(file);
