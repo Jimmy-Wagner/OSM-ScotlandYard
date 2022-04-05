@@ -1,1 +1,1 @@
-Exampletext
+This software has been released under the GNU Public license (GPL).
