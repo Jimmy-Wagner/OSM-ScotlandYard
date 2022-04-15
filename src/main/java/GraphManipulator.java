@@ -364,6 +364,7 @@ public class GraphManipulator {
         deletedVertexes.addAll(deletionGroup);
         graph.removeAllVertices(deletionGroup);
         mergedStopPoints.removeAll(deletionGroup);
+        //Test
         addCentroidWIthNeighbours(centroidID, neighboursOfDeletionGroup);
         mergedStopPoints.add(centroidID);
 
