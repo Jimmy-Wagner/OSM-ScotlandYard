@@ -283,6 +283,7 @@ public class DrawHandler {
         Network subwayAndTrain = subwayNetwork.mergeIntoThis(trainNetwork);
 
 
+        //hi
         Network busNetwork = new Network(RouteType.BUS, trimmedWaysBus);
         busNetwork.applyDouglasPeucker();
         busNetwork.buildStrokes();
