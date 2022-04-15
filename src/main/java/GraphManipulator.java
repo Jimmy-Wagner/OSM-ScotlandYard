@@ -281,7 +281,7 @@ public class GraphManipulator {
         for (int i = 0; i < coordsVertexes.size(); i++) {
             Coordinate c1 = coordsVertexes.get(i);
             int vertex1 = connectionVertexes.get(i);
-            if (alreadyMerged.contains(c1)) {
+            if (alreadyMerged.contains(c1) || deletedVertexes.contains(vertex1)) {
                 continue;
             }
             alreadyMerged.add(c1);
@@ -292,7 +292,7 @@ public class GraphManipulator {
             for (int j = i + 1; j < connectionVertexes.size(); j++) {
                 Coordinate c2 = coordsVertexes.get(j);
                 int vertex2 = connectionVertexes.get(j);
-                if (c1.distance(c2) < 30) {
+                if (c1.distance(c2) < 30 && !deletedVertexes.contains(vertex2)) {
                     currentMergeGroupCoords.add(c2);
                     currentMergeGroupVertexes.add(vertex2);
                     alreadyMerged.add(c2);
