@@ -233,7 +233,10 @@ public class GraphManipulator {
             connectionVertexGraph.addVertex(stopVertex);
             for (int connected : connectedStopVertexes.keySet()) {
                 connectionVertexGraph.addVertex(connected);
-                DefaultWeightedEdge edge = connectionVertexGraph.addEdge(stopVertex, connected);
+                DefaultWeightedEdge edge = null;
+                if (stopVertex != connected){
+                    edge = connectionVertexGraph.addEdge(stopVertex, connected);
+                }
                 if (edge != null) {
                     graph.setEdgeWeight(edge, connectedStopVertexes.get(connected));
                 }
